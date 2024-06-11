@@ -1,0 +1,69 @@
+//builder pattern
+
+#include <bits/stdc++.h>
+using namespace std;
+
+class Dog{
+  private:
+    string gender;
+    string name;
+    string breed;
+    int age;
+    bool isVacc;
+  public:
+    Dog(string gender, string name, string breed, int age, bool isVacc){
+        this->gender=gender;
+        this->name=name;
+        this->breed=breed;
+        this->age=age;
+        this->isVacc=isVacc;
+    }
+    void displayInfo() {
+        cout << "Gender: " << gender << ", Name: " << name << ", Breed: " << breed
+             << ", Age: " << age << ", Vaccinated: " << (isVacc ? "Yes" : "No") << endl;
+    }
+};
+
+class Builder{
+    private:
+      string gender;
+      string name;
+      string breed;
+      int age;
+      bool isVacc;
+    public:
+      Builder* setGender(string gender){
+        this->gender=gender;
+        return this;
+      }
+      Builder* setName(string name){
+          this->name=name;
+          return this;
+      }
+      Builder* setGBreed(string breed){
+        this->breed=breed;
+        return this;
+      }
+      Builder* setAge(int age){
+        this->age=age;
+        return this;
+      }
+      Builder* setVaccStatus(bool flag){
+          this->isVacc=flag;
+          return this;
+      }
+      Dog* build(){
+          return new Dog(gender, name, breed, age, isVacc);
+      }
+};
+
+
+int main() {
+     Builder* builder = new Builder();
+    Dog* dog=builder->setName("Tommy")->setAge(12)->build();
+    dog->displayInfo();
+	return 0;
+}
+
+//Output
+//Gender: , Name: Tommy, Breed: , Age: 12, Vaccinated: No

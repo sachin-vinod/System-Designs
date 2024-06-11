@@ -1,0 +1,89 @@
+//abstract factory design pattern
+//We should use the Abstract Factory when our code needs to work with different families of related products here we have two families mac and win but both shares same type component
+
+#include <bits/stdc++.h>
+using namespace std;
+
+class IButton{
+    public:
+    virtual void clicked()=0;
+};
+
+class WinButton:public IButton{
+    public:
+    void clicked(){
+        cout<<"Win Button clicked"<<endl;
+    }
+};
+class MacButton:public IButton{
+    public:
+    void clicked(){
+        cout<<"Mac Button clicked"<<endl;
+    }
+};
+
+class ITextBox{
+    public:
+    virtual void showText()=0;
+};
+
+class WinTextBox:public ITextBox{
+    public:
+    void showText(){
+        cout<<"Win TextBox show"<<endl;
+    }
+};
+class MacTextBox:public ITextBox{
+    public:
+    void showText(){
+        cout<<"Mac TextBox show"<<endl;
+    }
+};
+
+class Ifactory{
+    public:
+    virtual IButton* createButton()=0;
+    virtual ITextBox* createTextBox()=0;
+};
+
+class WinFactory:public Ifactory{
+    public:
+    IButton* createButton(){
+        return new WinButton();
+    }
+    ITextBox* createTextBox(){
+        return new WinTextBox();
+    }
+} ;
+
+class MacFactory:public Ifactory{
+    public:
+    IButton* createButton(){
+        return new MacButton();
+    }
+    ITextBox* createTextBox(){
+        return new MacTextBox();
+    }
+};
+
+class GuiFactory{
+    public:
+    static Ifactory* createFactory(string osType){
+        if(osType=="windows"){
+            return new WinFactory();
+        }
+        return new MacFactory();
+    }
+};
+
+int main() {
+    cout<<"Enter you Os"<<endl;
+    string osType;
+    cin>>osType;
+    Ifactory* fact=GuiFactory::createFactory(osType);
+    IButton* button=fact->createButton();
+    button->clicked();
+    ITextBox* textBox=fact->createTextBox();
+    textBox->showText();
+	return 0;
+}

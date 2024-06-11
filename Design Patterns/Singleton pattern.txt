@@ -1,0 +1,40 @@
+//Singleton pattern
+
+#include <bits/stdc++.h>
+using namespace std;
+
+class Singleton{
+    private:
+        static Singleton* instance;
+        
+        Singleton(){
+		//constructor must be private else someone can create object for this class
+            cout<<"instance created"<<endl;
+        }
+    public:    
+        static Singleton* createInstance(){
+            if(instance == NULL){
+                instance = new Singleton();
+            }
+            return instance;
+        }
+        
+        void doSomething(){
+            cout<<"Do Something"<<endl;
+        }
+};
+
+Singleton* Singleton::instance = NULL;
+
+int main() {
+    Singleton::createInstance()->doSomething();
+    Singleton::createInstance()->doSomething();
+
+	return 0;
+}
+
+
+//output: as constructor will get called only once since it is an creating only one time
+//instance created
+//Do Something
+//Do Something

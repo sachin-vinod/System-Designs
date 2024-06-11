@@ -1,0 +1,130 @@
+//tic tac toe
+
+#include <bits/stdc++.h>
+using namespace std;
+
+class PlayingPiece{
+    //factory design pattern
+    public:
+    virtual string getPiece()=0;
+};
+
+class PieceX:public PlayingPiece{
+    public:
+    string getPiece(){
+        return "X";
+    }
+};
+
+class PieceO:public PlayingPiece{
+    public:
+    string getPiece(){
+        return "O";
+    }
+};
+
+class Player{
+    public:
+    string name;
+    PlayingPiece* playingPiece;
+    Player(string name, PlayingPiece* playingPiece){
+        this->name=name;
+        this->playingPiece=playingPiece;
+    }
+};
+
+class Board{
+    //singletone
+    static Board* instance;
+    Board(){
+        cout<<"Board Created"<<endl;
+        this->board.resize(3,vector<string>(3,""));
+    }
+    public:
+    static Board* createBoard(){
+        if(instance==NULL){
+            instance=new Board();
+        }
+        return instance;
+    }
+    vector<vector<string>> board;
+};
+Board* Board::instance=NULL;
+
+class Gameplay{
+    private:
+    Player* p1, *p2;
+    Board* PlayArea;
+    public:
+    Gameplay(Player* p1, Player* p2, Board* board){
+        this->p1=p1;
+        this->p2=p2;
+        this->PlayArea=board;
+    }
+    
+    bool isSame(int x1,int y1, int x2, int y2, int x3, int y3){
+        if(PlayArea->board[x1][y1]=="" || PlayArea->board[x2][y2]=="" || PlayArea->board[x3][y3]==""){
+            return false;
+        }
+        return PlayArea->board[x1][y1]==PlayArea->board[x2][y2] 
+        && PlayArea->board[x1][y1]==PlayArea->board[x3][y3];
+    }
+    
+    bool isSameoneWin(){
+            if(isSame(0,0,1,1,2,2)
+            || isSame(0,2,1,1,2,0)
+            || isSame(0,1,1,1,2,1) 
+            || isSame(1,0,1,1,1,2)
+            || isSame(0,0,0,1,0,2)
+            || isSame(0,0,1,0,2,0)
+            || isSame(0,2,1,2,2,2)
+            || isSame(2,0,2,1,2,2)){
+                return true;
+            }
+    }
+    
+    Player* startGame(){
+        int chance=0;  //0->p1, 1->p2
+        while(!isSameoneWin()){
+            if(chance==0){
+                cout<<"Player1 chance"<<endl;
+            }
+            else{
+                cout<<"Player2 chance"<<endl;
+            }
+            cout<<"Available spaces are"<<endl;
+            int cnt=0;
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    if(PlayArea->board[i][j]==""){
+                        cout<<i<<", "<<j<<endl;
+                        cnt++;
+                    }
+                }
+            }
+            if(cnt==0){
+                return NULL;
+            }
+            cout<<"enter Your choice"<<endl;
+            int x, y;
+            cin>>x>>y;
+            while(x>3 || y>3 || x<0 || y<0 || PlayArea->board[x][y]!=""){
+                cin>>x>>y;
+            }
+            PlayArea->board[x][y]=chance==0?"X":"O";
+        }
+        if(chance==0){
+            return p2;
+        }
+        return p1;
+    }
+};
+int main() {
+    Player* p1=new Player("Sachin", new PieceX());
+    Player* p2=new Player("Nikhil", new PieceO());
+    Board* board=Board::createBoard();
+    Gameplay* game=new Gameplay(p1,p2,board);
+    Player* winner=game->startGame();
+    cout<<"Winner is "<<winner->name<<endl;
+	return 0;
+}

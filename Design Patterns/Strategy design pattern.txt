@@ -1,0 +1,57 @@
+//Strategy design pattern
+//it is looks like factory pattern cone 
+//Define an interface for creating an object, but let subclasses alter the type of objects that will be created
+//But strategy pattern
+//Define a family of algorithms, encapsulate each one, and make them interchangeable.
+
+
+#include <bits/stdc++.h>
+using namespace std;
+
+class DriveStrategy{
+    public:
+    virtual void drive()=0;
+};
+class NormalDrive:public DriveStrategy{
+    public:
+    void drive(){
+        cout<<"Normal Drive Activated"<<endl;
+    }
+};
+class SpecialDrive:public DriveStrategy{
+    public:
+    void drive(){
+        cout<<"Special Drive Activated"<<endl;
+    }
+};
+
+class Vehicle{
+    private:
+        DriveStrategy* driveStrategy;
+    public:
+        Vehicle(DriveStrategy* driveStrategy){
+            this->driveStrategy=driveStrategy;
+        }
+       
+        void drive(){
+            driveStrategy->drive();
+        }
+};
+
+int main() {
+    
+    string type;
+    cin>>type;
+    DriveStrategy* driveStrategy;
+    if(type == "sports" || type == "off"){
+        driveStrategy=new SpecialDrive();
+    }
+    else{
+        driveStrategy=new NormalDrive();
+    }
+    
+    Vehicle* vehicle=new Vehicle(driveStrategy);
+    vehicle->drive();
+    
+	return 0;
+}

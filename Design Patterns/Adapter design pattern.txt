@@ -1,0 +1,33 @@
+//Adapter design pattern
+
+#include <bits/stdc++.h>
+using namespace std;
+
+class Print{
+    public:
+    virtual void print()=0;
+};
+
+class LagacyPrinter{
+    //Adaptee
+    public:
+    void print(){
+        cout<<"Lagacy printer is printing..."<<endl;
+    }
+};
+
+class PrintAdapter:public Print{
+    //Adapter
+    private:
+        LagacyPrinter* lagacyPrinter=new LagacyPrinter();
+    public:
+    void print(){
+        lagacyPrinter->print();
+    }
+};
+
+int main() {
+    Print* print=new PrintAdapter();
+    print->print();
+	return 0;
+}

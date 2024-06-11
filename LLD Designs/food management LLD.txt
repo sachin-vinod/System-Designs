@@ -1,0 +1,89 @@
+//food management LLD
+
+#include <bits/stdc++.h>
+using namespace std;
+
+
+class Menu{
+    public:
+    map<string,int> foodMap;   //foodName, price
+    Menu(map<string,int> foodMap){
+        this->foodMap=foodMap;
+    }
+};
+
+class Restorent{
+    public:
+    int restoId;
+    string name;
+    Menu* menu;
+    
+    Restorent(int restoId, string name){
+        this->restoId=restoId;
+        this->name=name;
+    }
+    
+    void setMenu(Menu* menu){
+        this->menu=menu;
+    }
+    
+    void startPrepairingFood(map<string,int> foodCntMap){
+        int Totalprice=0;
+        cout<<"Ordered Foods are: ";
+        for(auto food:foodCntMap){
+            cout<<food.first<<" ";
+            Totalprice+=(food.second*menu->foodMap[food.first]);
+        }
+        cout<<endl;
+        cout<<"Total price is: "<<Totalprice<<endl;
+    }
+};
+
+class RestoManager{
+    public:
+    map<string,Restorent*> restoNameMap; //restoName, resto
+    void setResto(string name, Restorent* restorent){
+        restoNameMap[name]=restorent;
+    }
+};
+
+class FoodManager{
+    public:
+    void prepareFood(map<string, int> foodCntMap, string restoName, RestoManager* restoManager){
+        Restorent* restorent=restoManager->restoNameMap[restoName];
+        restorent->startPrepairingFood(foodCntMap);
+    }
+};
+int main() {
+    
+    FoodManager* foodManager=new FoodManager();
+    RestoManager* restoManager=new RestoManager();
+    
+    //----------------------------For first restorent-------------------------
+    Restorent* resto1=new Restorent(1,"Baba_Dhaba");
+    map<string,int> foodMap1;
+    foodMap1["Samosa"]=10;
+    foodMap1["Dhosa"]=30;
+    foodMap1["Idli"]=20;
+    foodMap1["Jalebi"]=50;
+    Menu* menu1=new Menu(foodMap1);
+    resto1->setMenu(menu1);
+    restoManager->setResto("Baba_Dhaba",resto1);
+    //-------------------------------------------------------------------------
+    //*************************************************************************
+    //----------------------------For second restorent-------------------------
+    Restorent* resto2=new Restorent(2,"Gujrat_Anand");
+    map<string,int> foodMap2;
+    foodMap2["Dhokla"]=10;
+    foodMap2["Fafada"]=30;
+    foodMap2["Jalebi"]=50;
+    Menu* menu2=new Menu(foodMap2);
+    resto2->setMenu(menu2);
+    restoManager->setResto("Gujrat_Anand",resto2);
+    //-------------------------------------------------------------------------
+    map<string,int> orderCnt;
+    orderCnt["Fafada"]=3;
+    orderCnt["Jalebi"]=2;
+    foodManager->prepareFood(orderCnt,"Gujrat_Anand",restoManager);
+	return 0;
+}

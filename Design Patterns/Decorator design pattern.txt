@@ -1,0 +1,84 @@
+//Decorator design pattern
+
+#include <bits/stdc++.h>
+using namespace std;
+
+class IBurger{
+    public:
+    virtual double getPrice()=0;
+};
+
+class ZingerBurger:public IBurger{
+    public:
+    double price;
+    ZingerBurger(){
+        this->price=120.0;
+    }
+    double getPrice(){
+        return price;
+    }
+};
+
+class TandooriBurger:public IBurger{
+    public:
+    double price;
+    TandooriBurger(){
+        this->price=140.0;
+    }
+    double getPrice(){
+        return price;
+    }
+};
+
+class CheesBurger:public IBurger{
+    public:
+    IBurger* burger;
+    CheesBurger(IBurger* burger){
+        this->burger=burger;
+    }
+    double getPrice(){
+        return burger->getPrice()+20.0;
+    }
+};
+
+class MeoBurger:public IBurger{
+    public:
+    IBurger* burger;
+    MeoBurger(IBurger* burger){
+        this->burger=burger;
+    }
+    double getPrice(){
+        return burger->getPrice()+40.0;
+    }
+};
+
+class DecoraterFactory{
+    public:
+    static IBurger* createBurger(string type){
+        if(type=="ZingerBurger"){
+            return new ZingerBurger();
+        }
+        return new TandooriBurger();
+    }
+    static IBurger* addChees(IBurger* burger){
+        return new CheesBurger(burger);
+    }
+    static IBurger* addMeo(IBurger* burger){
+        return new MeoBurger(burger);
+    }
+};
+
+int main() {
+    cout<<"Enter type of burger"<<endl;
+    string type;
+    cin>>type;
+    IBurger* burger=DecoraterFactory::createBurger(type);
+    
+    burger=DecoraterFactory::addChees(burger);
+    burger=DecoraterFactory::addMeo(burger);
+    
+    cout<<"Total price is "<<burger->getPrice()<<endl;
+    
+  
+	return 0;
+}

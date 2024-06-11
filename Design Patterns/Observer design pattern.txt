@@ -1,0 +1,54 @@
+//Observer design pattern
+
+#include <bits/stdc++.h>
+using namespace std;
+
+class IUser{
+    public:
+    virtual void notify(string msg)=0;
+};
+
+class user:public IUser{
+    private:
+        int userId;
+    public:
+        user(int id){
+            this->userId=id;
+        }
+        void notify(string msg){
+            cout<<"User with user id"<<userId<<" Have message "<<msg<<endl;
+        }
+};
+
+class Group{
+    public:
+    list<IUser*> grp;
+    void add(IUser* user){
+        grp.push_back(user);
+    }
+    void remove(IUser* user){
+        grp.remove(user);
+    }
+    void notify(string msg){
+        for(auto user:grp){
+            user->notify(msg);
+        }
+    }
+};
+
+int main() {
+    // create group of users and notify them
+    IUser* user1=new user(1);
+    IUser* user2=new user(2);
+    IUser* user3=new user(3);
+    
+    Group* group=new Group();
+    group->add(user1);
+    group->add(user2);
+    group->add(user3);
+    
+    group->notify("new string");
+    group->remove(user2);
+    group->notify("new new string");
+	return 0;
+}

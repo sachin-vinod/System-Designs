@@ -1,0 +1,57 @@
+//Parking system
+
+#include <bits/stdc++.h>
+using namespace std;
+
+class Parking{
+    public:
+    virtual void parkVehicle()=0;
+    virtual void freeSpace(pair<int,int> parkingLot)=0; 
+};
+class VehicleParking:public Parking{
+    protected:
+    set<pair<int,int>> AvailableLots;
+    public:
+    VehicleParking(int n){
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                AvailableLots.insert({i,j});
+            }
+        }
+    }
+    void parkVehicle(){
+        if(AvailableLots.empty()){
+            cout<<"Parking is not available All area is full"<<endl;
+        }
+        auto l=*(AvailableLots.begin());
+        AvailableLots.erase(l);
+        cout<<"Park your vehicle at "<<l.first<<" "<<l.second<<endl;
+    }
+    void freeSpace(pair<int,int> parkingLot){
+        AvailableLots.insert(parkingLot);
+        cout<<parkingLot.first<<" "<<parkingLot.second<<" Now it is free"<<endl;
+    }
+};
+class BigVehicleParking:public VehicleParking{
+    public:
+    BigVehicleParking(int n):VehicleParking(n) {}
+};
+class SmallVehicleParking:public VehicleParking{
+    public:
+    SmallVehicleParking(int n):VehicleParking(n) {}
+    
+};
+class ParkingFactory{
+    public:
+    static Parking* createParking(string type, int n){
+        if(type=="Big"){
+            return new BigVehicleParking(n);
+        }
+        return new SmallVehicleParking(n);
+    }
+};
+int main() {
+    Parking* parking=ParkingFactory::createParking("Big",5);
+    parking->parkVehicle();
+	return 0;
+}
