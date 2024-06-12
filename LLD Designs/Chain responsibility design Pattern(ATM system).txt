@@ -1,0 +1,61 @@
+//Chain responsibility design Pattern (Atm Machine)
+#include <bits/stdc++.h>
+using namespace std;
+
+class CashHandler{
+    public:
+    virtual void setNextHandler(CashHandler* nextHandler)=0;
+    virtual void handleCashRequest(int neededCash, map<int,int> mp)=0;
+};
+
+class BaseHnadler:public CashHandler{
+    private:
+    CashHandler* nextHandler;
+    int cashValue;
+    public:
+    BaseHnadler(int cashValue){
+        this->cashValue=cashValue;
+    }
+    void setNextHandler(CashHandler* nextHandler){
+        this->nextHandler=nextHandler;
+    }
+    void handleCashRequest(int neededCash, map<int,int> mp){
+        int remCash=neededCash%cashValue;
+        mp[cashValue]=neededCash/cashValue;
+        if(remCash!=0){
+            if(nextHandler==NULL){
+                cout<<"Transaction can't be fulfill"<<endl;
+                return;
+            }
+            nextHandler->handleCashRequest(remCash,mp);
+        }
+        else{
+            for(auto x:mp){
+                cout<<x.first<<"RS.:"<<x.second<<" notes"<<endl;
+            }
+        }
+    }
+};
+
+class Handler2000:public BaseHnadler{
+   public:
+   Handler2000():BaseHnadler(2000){}
+};
+
+class Handler500:public BaseHnadler{
+    public:
+    Handler500():BaseHnadler(500){}
+};
+
+int main() {
+    CashHandler* handler2000=new Handler2000();
+    CashHandler* handler500=new Handler500();
+    handler2000->setNextHandler(handler500);
+    handler500->setNextHandler(NULL);
+    CashHandler* trasactionHandler=handler2000;
+    map<int,int> mp;
+    trasactionHandler->handleCashRequest(3500,mp);
+    
+    
+	return 0;
+}
