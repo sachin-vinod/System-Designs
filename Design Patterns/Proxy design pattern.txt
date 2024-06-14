@@ -1,0 +1,48 @@
+//Proxy design pattern
+#include <bits/stdc++.h>
+using namespace std;
+
+
+class EmployeeDao{
+    public:
+    virtual void createRow(string userType)=0;
+    virtual void getTable()=0;
+};
+
+class EmployeeTable:public EmployeeDao{
+    public:
+    void createRow(string userType){
+        cout<<"Row is created"<<endl;
+    }
+    void getTable(){
+        cout<<"This is an table"<<endl;
+    }
+};
+
+class EmployeeProxy:public EmployeeDao{
+    private:
+    EmployeeDao* employeeTable;
+    public:
+    EmployeeProxy(){
+        this->employeeTable=new EmployeeTable();
+    }
+    void createRow(string userType){
+        if(userType=="Admin"){
+            employeeTable->createRow(userType);
+        }
+        else{
+            cout<<"Only Admin have access to do this create operation"<<endl;
+        }
+    }
+    void getTable(){
+        employeeTable->getTable();
+    }
+    
+};
+
+int main() {
+    EmployeeDao* employeeProxy=new EmployeeProxy();
+    employeeProxy->createRow("Admin");
+    employeeProxy->getTable();
+	return 0;
+}
