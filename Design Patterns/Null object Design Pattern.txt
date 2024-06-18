@@ -1,0 +1,56 @@
+//Null object Design Pattern
+#include <bits/stdc++.h>
+using namespace std;
+
+class Vehicle{
+    public:
+    virtual int getTankCapacity()=0;
+    virtual int getTopSpeed()=0;
+};
+
+class Car:public Vehicle{
+    public:
+    int getTankCapacity(){
+        return 40;
+    }
+    int getTopSpeed(){
+        return 180;
+    }
+};
+
+class NullPointer:public Vehicle{
+    //as it is replace of null it will show default behaviour
+    public:
+    int getTankCapacity(){
+        return 0;
+    }
+    int getTopSpeed(){
+        return 0;
+    }
+};
+
+class createVehicle{
+    public:
+    static Vehicle* getVehicle(string type){
+        if(type=="Car"){
+            return new Car();
+        }
+        //if didn't get any correct type insted of return NULL we return null object
+        return new NullPointer();
+        
+    }
+};
+
+int main() {
+    Vehicle* myVehicle=createVehicle::getVehicle("Car");
+    cout<<myVehicle->getTankCapacity()<<endl;
+    cout<<myVehicle->getTopSpeed()<<endl;
+    //output: 40 180
+    
+    Vehicle* myVehicle2=createVehicle::getVehicle("Bike");
+    cout<<myVehicle2->getTankCapacity()<<endl;
+    cout<<myVehicle2->getTopSpeed()<<endl;
+    //output: 0 0
+    
+	return 0;
+}
