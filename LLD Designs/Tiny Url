@@ -19,7 +19,7 @@ class UrlObj{
         }
         
         string getOrigUrl(){
-            return this->origUrl
+            return this->origUrl;
         }
         
         string getTinyUrl(){
@@ -58,7 +58,7 @@ class ResponseDirectedToUrl:public Response{
         UrlObj* data;
         ResponseDirectedToUrl(UrlObj* obj){
             this->status=304;
-            this->responseMsg="Resquest For Tiny Url: " + obj.getTinyUrl() + "Directed To Orignal Url " + obj.getOrigUrl(); 
+            this->responseMsg="Resquest For Tiny Url: " + obj->getTinyUrl() + "Directed To Orignal Url " + obj->getOrigUrl(); 
             
             this->data=obj;
         }
@@ -88,30 +88,31 @@ class GenerateTinyUrl{
         static UrlObj* generate(string origUrl){
             string suffUrl=Base62Converter::convert(maxUrlId);
             string tinyUrl="https://tinyUrl.com/"+suffUrl;
-            UrlObj* UrlObj=new UrlObj(maxUrlId, origUrl, tinyUrl);
+            UrlObj* urlObj=new UrlObj(maxUrlId, origUrl, tinyUrl);
             
-            return UrlObj;
+            return urlObj;
         }
 };
 
 class PostToDB{
     public:
-        Response* PostToDB(string origUrl){
+        Response* postToDB(string origUrl){
             UrlObj* urlObj;
             if(database.find(origUrl)==database.end()){
                 //if tinyUrl not present in database we can also use bloom filter here we implement later
                 urlObj = GenerateTinyUrl::generate(origUrl); //static method
                 database[origUrl]=urlObj;
                 tinyToOriDB[urlObj->getTinyUrl()]=urlObj->getOrigUrl();
+                maxUrlId++;  //increase it for next post call, in real world senario we will use int id = redis.INCR("url_id"); // pseudo-code
+                cout<<"tiny Url Generated: "<<urlObj->getTinyUrl()<<endl;
             }
             else{
                 //if tinyUrl already present
                 urlObj=database[origUrl];
+                cout<<"Url already present in database"<<endl;
             }
             Response* response=new ResponseOk(urlObj);
-            PrintResponse::print(response); //static method
-            maxUrlId++;  //increase it for next post call, in real world senario we will use int id = redis.INCR("url_id"); // pseudo-code
-
+             
             return response;
         }
 };
@@ -123,16 +124,17 @@ class DirectToOriginalUrl{
             if(tinyToOriDB.find(tinyUrl)==tinyToOriDB.end()){
                 //url not Found
                 response=new ResponseNotFound();
-                cout<<response->error<<end;
+                string error = ((ResponseNotFound*)response)->error;  //type casting
+                cout<<error<<endl;
             }
             else{
                 string origUrl=tinyToOriDB[tinyUrl];
                 UrlObj* urlObj=database[origUrl];
                 response=new ResponseDirectedToUrl(urlObj);
-                cout<<response->responseMsg<<endl;
+                cout<<((ResponseDirectedToUrl*)response)->responseMsg<<endl;
             }
             
-            return response
+            return response;
         }
 };
 
