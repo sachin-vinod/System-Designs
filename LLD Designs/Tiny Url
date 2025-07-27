@@ -58,7 +58,7 @@ class ResponseDirectedToUrl:public Response{
         UrlObj* data;
         ResponseDirectedToUrl(UrlObj* obj){
             this->status=304;
-            this->responseMsg="Resquest For Tiny Url: " + obj->getTinyUrl() + "Directed To Orignal Url " + obj->getOrigUrl(); 
+            this->responseMsg= string("Request For Tiny Url: ") + obj->getTinyUrl() + " Directed To Original Url: " + obj->getOrigUrl();
             
             this->data=obj;
         }
@@ -96,7 +96,7 @@ class GenerateTinyUrl{
 
 class PostToDB{
     public:
-        Response* postToDB(string origUrl){
+        static Response* postToDB(string origUrl){
             UrlObj* urlObj;
             if(database.find(origUrl)==database.end()){
                 //if tinyUrl not present in database we can also use bloom filter here we implement later
@@ -119,7 +119,7 @@ class PostToDB{
 
 class DirectToOriginalUrl{
     public:
-        Response* direct(string tinyUrl){
+        static Response* direct(string tinyUrl){
             Response* response;
             if(tinyToOriDB.find(tinyUrl)==tinyToOriDB.end()){
                 //url not Found
@@ -139,6 +139,21 @@ class DirectToOriginalUrl{
 };
 
 int main() {
-    cout << "Hello Geek!";
+    maxUrlId=1;
+    PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/blob/main/LLD%20Designs/Tiny%20Url");
+    
+    PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/blob/main/LLD%20Designs");
+    
+    PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/blob/main/LLD%20Designs");
+    
+    DirectToOriginalUrl::direct("https://tinyUrl.com/3");
+    
+    PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/main/LLD%20Designs/Tiny%20Url");
+    
+    DirectToOriginalUrl::direct("https://tinyUrl.com/3");
+    
+    DirectToOriginalUrl::direct("https://tinyUrl.com/2");
+    
+    
     return 0;
 }
