@@ -65,6 +65,7 @@ class ResponseDirectedToUrl:public Response{
 };
 
 map<string,UrlObj*> database;   //origUrl, UrlObj;
+map<string,string> tinyToOriDB; //tiny, orig;
 int maxUrlId;  //can be stored into redis also we need to think about Race condition here in this condition we can use redis atomic counter which give unique id alway even two user make call at same time
 const string BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -101,6 +102,7 @@ class PostToDB{
                 //if tinyUrl not present in database we can also use bloom filter here we implement later
                 urlObj = GenerateTinyUrl::generate(origUrl); //static method
                 database[origUrl]=urlObj;
+                tinyToOriDB[urlObj->getTinyUrl()]=urlObj->getOrigUrl();
             }
             else{
                 //if tinyUrl already present
@@ -111,6 +113,26 @@ class PostToDB{
             maxUrlId++;  //increase it for next post call, in real world senario we will use int id = redis.INCR("url_id"); // pseudo-code
 
             return response;
+        }
+};
+
+class DirectToOriginalUrl{
+    public:
+        Response* direct(string tinyUrl){
+            Response* response;
+            if(tinyToOriDB.find(tinyUrl)==tinyToOriDB.end()){
+                //url not Found
+                response=new ResponseNotFound();
+                cout<<response->error<<end;
+            }
+            else{
+                string origUrl=tinyToOriDB[tinyUrl];
+                UrlObj* urlObj=database[origUrl];
+                response=new ResponseDirectedToUrl(urlObj);
+                cout<<response->responseMsg<<endl;
+            }
+            
+            return response
         }
 };
 
