@@ -66,11 +66,30 @@ class ResponseDirectedToUrl:public Response{
 
 map<string,UrlObj*> database;   //origUrl, UrlObj;
 int maxUrlId;  //can be stored into redis also we need to think about Race condition here in this condition we can use redis atomic counter which give unique id alway even two user make call at same time
+const string BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+class Base62Converter{
+    public:
+        static string convert(int id){
+            string urlSuffix="";
+            
+            while(id>0){
+                urlSuffix+=BASE62[id%62];
+                id/=62;
+            }
+            
+            return urlSuffix;
+        }
+};
 
 class GenerateTinyUrl{
     public:
         static UrlObj* generate(string origUrl){
+            string suffUrl=Base62Converter::convert(maxUrlId);
+            string tinyUrl="https://tinyUrl.com/"+suffUrl;
+            UrlObj* UrlObj=new UrlObj(maxUrlId, origUrl, tinyUrl);
             
+            return UrlObj;
         }
 };
 
@@ -89,7 +108,7 @@ class PostToDB{
             }
             Response* response=new ResponseOk(urlObj);
             PrintResponse::print(response); //static method
-            maxUrlId++;  //increase it for next post call in real world senario we will use int id = redis.INCR("url_id"); // pseudo-code
+            maxUrlId++;  //increase it for next post call, in real world senario we will use int id = redis.INCR("url_id"); // pseudo-code
 
             return response;
         }
