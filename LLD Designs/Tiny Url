@@ -1,0 +1,101 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class UrlObj{
+    private:
+        int UrlId;
+        string origUrl;
+        string tinyUrl;
+        
+    public:
+        UrlObj(int UrlId, string origUrl, string tinyUrl){
+            this->UrlId=UrlId;
+            this->origUrl=origUrl;
+            this->tinyUrl=tinyUrl;
+        }
+        
+        int getUrlId(){
+            return this->UrlId;
+        }
+        
+        string getOrigUrl(){
+            return this->origUrl
+        }
+        
+        string getTinyUrl(){
+            return this->tinyUrl;
+        }
+};
+
+class Response{
+    
+};
+
+class ResponseOk:public Response{
+    public:
+        int status;
+        UrlObj* data;
+        ResponseOk(UrlObj* obj){
+            this->status=200;
+            this->data=obj;
+        }
+};
+
+class ResponseNotFound:public Response{
+    public:
+        int status;
+        string error;
+        ResponseNotFound(){
+            this->status=404;
+            this->error="Url Not Found";
+        }
+};
+
+class ResponseDirectedToUrl:public Response{
+    public:
+        int status;
+        string responseMsg;
+        UrlObj* data;
+        ResponseDirectedToUrl(UrlObj* obj){
+            this->status=304;
+            this->responseMsg="Resquest For Tiny Url: " + obj.getTinyUrl() + "Directed To Orignal Url " + obj.getOrigUrl(); 
+            
+            this->data=obj;
+        }
+};
+
+map<string,UrlObj*> database;   //origUrl, UrlObj;
+int maxUrlId;  //can be stored into redis also we need to think about Race condition here in this condition we can use redis atomic counter which give unique id alway even two user make call at same time
+
+class GenerateTinyUrl{
+    public:
+        static UrlObj* generate(string origUrl){
+            
+        }
+};
+
+class PostToDB{
+    public:
+        Response* PostToDB(string origUrl){
+            UrlObj* urlObj;
+            if(database.find(origUrl)==database.end()){
+                //if tinyUrl not present in database we can also use bloom filter here we implement later
+                urlObj = GenerateTinyUrl::generate(origUrl); //static method
+                database[origUrl]=urlObj;
+            }
+            else{
+                //if tinyUrl already present
+                urlObj=database[origUrl];
+            }
+            Response* response=new ResponseOk(urlObj);
+            PrintResponse::print(response); //static method
+            maxUrlId++;  //increase it for next post call in real world senario we will use int id = redis.INCR("url_id"); // pseudo-code
+
+            return response;
+        }
+};
+
+int main() {
+    cout << "Hello Geek!";
+    return 0;
+}
