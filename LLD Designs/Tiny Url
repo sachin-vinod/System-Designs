@@ -139,7 +139,7 @@ class DirectToOriginalUrl{
 };
 
 int main() {
-    maxUrlId=1;
+    maxUrlId=109978675878687;
     PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/blob/main/LLD%20Designs/Tiny%20Url");
     
     PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/blob/main/LLD%20Designs");
