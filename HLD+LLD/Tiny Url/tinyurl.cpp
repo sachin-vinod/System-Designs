@@ -1,1 +1,159 @@
+#include <bits/stdc++.h>
+using namespace std;
 
+class UrlObj{
+    private:
+        int UrlId;
+        string origUrl;
+        string tinyUrl;
+        
+    public:
+        UrlObj(int UrlId, string origUrl, string tinyUrl){
+            this->UrlId=UrlId;
+            this->origUrl=origUrl;
+            this->tinyUrl=tinyUrl;
+        }
+        
+        int getUrlId(){
+            return this->UrlId;
+        }
+        
+        string getOrigUrl(){
+            return this->origUrl;
+        }
+        
+        string getTinyUrl(){
+            return this->tinyUrl;
+        }
+};
+
+class Response{
+    
+};
+
+class ResponseOk:public Response{
+    public:
+        int status;
+        UrlObj* data;
+        ResponseOk(UrlObj* obj){
+            this->status=200;
+            this->data=obj;
+        }
+};
+
+class ResponseNotFound:public Response{
+    public:
+        int status;
+        string error;
+        ResponseNotFound(){
+            this->status=404;
+            this->error="Url Not Found";
+        }
+};
+
+class ResponseDirectedToUrl:public Response{
+    public:
+        int status;
+        string responseMsg;
+        UrlObj* data;
+        ResponseDirectedToUrl(UrlObj* obj){
+            this->status=304;
+            this->responseMsg= string("Request For Tiny Url: ") + obj->getTinyUrl() + " Directed To Original Url: " + obj->getOrigUrl();
+            
+            this->data=obj;
+        }
+};
+
+map<string,UrlObj*> database;   //origUrl, UrlObj;
+map<string,string> tinyToOriDB; //tiny, orig;
+int maxUrlId;  //can be stored into redis also we need to think about Race condition here in this condition we can use redis atomic counter which give unique id alway even two user make call at same time
+const string BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+class Base62Converter{
+    public:
+        static string convert(int id){
+            string urlSuffix="";
+            
+            while(id>0){
+                urlSuffix+=BASE62[id%62];
+                id/=62;
+            }
+            
+            return urlSuffix;
+        }
+};
+
+class GenerateTinyUrl{
+    public:
+        static UrlObj* generate(string origUrl){
+            string suffUrl=Base62Converter::convert(maxUrlId);
+            string tinyUrl="https://tinyUrl.com/"+suffUrl;
+            UrlObj* urlObj=new UrlObj(maxUrlId, origUrl, tinyUrl);
+            
+            return urlObj;
+        }
+};
+
+class PostToDB{
+    public:
+        static Response* postToDB(string origUrl){
+            UrlObj* urlObj;
+            if(database.find(origUrl)==database.end()){
+                //if tinyUrl not present in database we can also use bloom filter here we implement later
+                urlObj = GenerateTinyUrl::generate(origUrl); //static method
+                database[origUrl]=urlObj;
+                tinyToOriDB[urlObj->getTinyUrl()]=urlObj->getOrigUrl();
+                maxUrlId++;  //increase it for next post call, in real world senario we will use int id = redis.INCR("url_id"); // pseudo-code
+                cout<<"tiny Url Generated: "<<urlObj->getTinyUrl()<<endl;
+            }
+            else{
+                //if tinyUrl already present
+                urlObj=database[origUrl];
+                cout<<"Url already present in database"<<endl;
+            }
+            Response* response=new ResponseOk(urlObj);
+             
+            return response;
+        }
+};
+
+class DirectToOriginalUrl{
+    public:
+        static Response* direct(string tinyUrl){
+            Response* response;
+            if(tinyToOriDB.find(tinyUrl)==tinyToOriDB.end()){
+                //url not Found
+                response=new ResponseNotFound();
+                string error = ((ResponseNotFound*)response)->error;  //type casting
+                cout<<error<<endl;
+            }
+            else{
+                string origUrl=tinyToOriDB[tinyUrl];
+                UrlObj* urlObj=database[origUrl];
+                response=new ResponseDirectedToUrl(urlObj);
+                cout<<((ResponseDirectedToUrl*)response)->responseMsg<<endl;
+            }
+            
+            return response;
+        }
+};
+
+int main() {
+    maxUrlId=109978675878687;
+    PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/blob/main/LLD%20Designs/Tiny%20Url");
+    
+    PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/blob/main/LLD%20Designs");
+    
+    PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/blob/main/LLD%20Designs");
+    
+    DirectToOriginalUrl::direct("https://tinyUrl.com/3");
+    
+    PostToDB::postToDB("https://github.com/sachin-vinod/System-Designs/main/LLD%20Designs/Tiny%20Url");
+    
+    DirectToOriginalUrl::direct("https://tinyUrl.com/3");
+    
+    DirectToOriginalUrl::direct("https://tinyUrl.com/2");
+    
+    
+    return 0;
+}
