@@ -1,1 +1,174 @@
+Rate Limiter
 
+# why use rate limiter
+
+1.  Rate limiter prevent Dos attack
+2.  Reduce cost where the system is using a 3rd- party API service and
+    it charge on a per-api-call-basis
+3.  To reduce server load
+
+# where to implement Rate limiter logic
+
+1.  Client side(Not recommended)
+    a.  Ways to Bypass client-side rate limiting
+        -   Tampering with the code:
+            -   In case of web app: Attacker can edit, remove or disable
+                logic using devtools
+            -   In case of Mobile app: Attacker can decompile APK/IPA
+                modify logic and repack it
+        -   Intercepting and modifying api request using POSTMAN and all
+            which will not check client side logic
+        -   Scriptd or automated request using python or nodeJs again
+            using this req will not check client side logic
+        -   Using mutliple clients/Browser
+2.  Server side(less recommended)
+    a.  Problem with server side implementation
+        -   Reamark
+            -   Duplication of logic in case of distributed system
+            -   Server side rate limiting is not "bad" it work fine
+                since no one have access to change the logic but again
+                even to check for rate limit server must accept all the
+                request after this it will make call serve req or not so
+            -   So it can reduct cost to in case of making 3rd party api
+                call but still our server will experience load any how
+        -   what point of rate limiting if it is still hiting main
+            application (backend) login layer
+            -   That means Unwanter request still use CPU
+            -   And this can lead to downtime of system
+        -   Non centralized control
+            -   In microservice or multi-server setup if we put the rate
+                limit logic inside each app server, we need to
+                -   Keep logic consistent across all the services
+                    (i.e. if we want to change logic we need to do it in
+                    all the services if it is microservice)
+        -   Security Hardening
+            -   Attakcer can still hit your N/W and abuse other
+                endpoints before hitting into limit
+                -   Scenario
+                    -   Imagine we run a microservice-based e-commerce
+                        platform
+                        -   Service A : /api/products -\> return list of
+                            products
+                        -   Service B : /api/cart -\> Add to cart
+                        -   Service C : /api/checkout -\> go to checkout
+                            page
+                        -   We decide to rate limit in app code each
+                            service 100 req/min per client
+                    -   Attacker plan and problem
+                        -   Goal: Slow down or take down platform
+                        -   Method: send 50,000 req/sec to
+                            "/api/products"
+                        -   System respons for every req
+                            -   request forwarded to service A
+                            -   Service A's app code runs -\> checks the
+                                user's req count in redis
+                            -   If limit exceed it return HTPP 429 too
+                                many requests Problem
+                            -   Even though the attakcer is "blocked"
+                                -   App service still accept the N/W
+                                    connection
+                                -   Still Deserialized HTTP headers
+                                -   Still do redis lookups
+                                -   Still allocate memory for request
+                                    object
+                            -   CPU and memory uses spikes that will
+                                slowing legimated request
+                            -   Attacker also can target multiple
+                                service at once to multiply to load
+3.  Api Gateway/Middleware (Highly recommended) Note: This method
+    overcome all the problem which we faced in anothor two
+    -   How it will identify user without fully deserialization
+        -   Api Key
+        -   Oauth token
+        -   IP address
+        -   Session ID
+        -   It PARSE only part of HTTP headers not like backend services
+            which parse whole HTTP headers and it will lead to less
+            consumption of CPU
+
+# Algorithms for rate limiting
+
+1.  Throtteling or debounsing (can be only used in client side not
+    recommended for rate limiting best for some other use cases
+    e.g. search api call after some time to recomendation)
+2.  Token Bucket -Idea - We have a "bucket" that holds tockens - Each
+    tocken allows one request - Tocken are added to bucket at a fixed
+    rate till capacity overloaded (e.g. 5 tocken/sec till bucket is
+    full) - If bucket is full extra tockens are discarded
+    -   Flow: When a request comes
+        -   If tocken available -\> Remove one and process the request
+        -   If No tocken -\> Request rejected or delayed according to
+            logic
+    -   Points To note
+        -   Allow bursts(at a time to large number of request) if the
+            bucket has saved tockens
+        -   Good for APIs that can tolarate short spikes
+    -   Real life example
+        -   Secnario
+            -   Imagine we run a weather API
+                -   Bucket Capacity: 10 tockens
+                -   Tocken refill rate: 2 tockens/sec
+        -   Case 1:
+            -   Let's say someone sent 20 request and that used
+                currently have total 10 tockens in bucket so
+            -   10 request will processed and other 10 reuest might be
+                rejected or delayed accroding to what logic we implement
+        -   Case 2:
+            -   Let's say in bucket user have 7 tockens and user made 4
+                request so all requests get procressed and 3 tockens are
+                remaining now
+            -   and as we have tocket refill rate of 2 tockens/sec so
+                -   After 1 sec of the req (if no call in b/w) -\>
+                    bucket will have 3(rem) + 2(new) = 5 tockens
+                -   After 2 sec of the req (if no call in b/w) -\>
+                    bucket will have 5(rem) + 2(new) = 7 tockens
+                -   After 3 sec of the req (if no call in b/w) -\>
+                    bucket will have 7(rem) + 2(new) = 9 tockens
+                -   After 4 sec of the req (if no call in b/w) -\>
+                    bucket will have 9(rem) + 2(new) = 11 tockens =\> 10
+                    tickens (as it exeeds a bucket capacity we will
+                    remove extra)
+3.  Leaky Bucket
+    -   Idea
+        -   No matter how much water you pour in at once it only drips
+            out at a fixed rate
+    -   Secnario
+        -   Leak rate = 10 req/sec
+        -   Bucket capacity = 200 request
+    -   Real life example
+        -   Case 1:
+            -   If 300 req. arrives
+            -   First 200 requests fill bucket -\> 100 dropped
+            -   From these 200 in the bucket or queue only 10 req per
+                sec will be processed
+            -   So total 20 sec it will take to process all\
+        -   Case 2:
+            -   If in b/w processing of these 200 request after 10 sec
+                50 more reuests comes in
+            -   So at this time after 10 sec as Leak rate is 10 req/sec
+                100 requests are already served
+            -   so we have intake capacity of 100 request more in bucket
+            -   so it will accept 50 requests and not our intake
+                capacity will be 50 more
+    -   Problems
+        -   Race condition
+            -   Let's say the current intake for user xyz if available
+                100 and one request came and at same time or in
+                diffrence of miliseconds antoher request form same user
+                came and both reuests readed intake as 100 and after 2
+                request current bucket still 99
+            -   since it must be 98 as we have serverd 2 request now
+                there is race condition
+            -   Solution
+                -   Atomic operation in redis
+                -   Lua script in redis -\> which allows atomic
+                    operation (one operation at a time)
+        -   Synchronixation problem
+            -   In large system we cant handle all the request to check
+                rate limit only by using one instance of rate limiter
+            -   We must have multiple instance to devide traffic
+            -   In this case if each rate limiter will have its own
+                counter or store it will not work
+            -   Assume user xyz made 2 req and both went to diffrent
+                instance
+            -   To over come this we should use centrelized store
