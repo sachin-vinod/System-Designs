@@ -7,9 +7,7 @@ using namespace std;
 class Vehicle{
     public:
     int age;
-        virtual void getIntro(){
-            cout<<"add intro";
-        }
+        virtual void getIntro() = 0 ;
 };
 
 class TwoWheeler:public Vehicle{
@@ -29,11 +27,11 @@ class ThreeWheeler:public Vehicle{
 class factory{
     public:
         //there is no need to keep below function non static coz we dont need to created any instance of thsi facotry calss
-        static Vehicle* createVehicle(int type){
-            if(type==1){
+        static Vehicle* createVehicle(string type){
+            if(type=="Two Wheeler"){
                 return new TwoWheeler();
             }
-            else if(type==2){
+            else if(type=="Three Wheeler"){
                 return new ThreeWheeler();
             }
             else{
@@ -43,7 +41,8 @@ class factory{
 };
 
 int main() {
-	Vehicle* vehicle = factory::createVehicle(1);
+	Vehicle* vehicle = factory::createVehicle("Two Wheeler");
 	vehicle->getIntro();
 	return 0;
+
 }
