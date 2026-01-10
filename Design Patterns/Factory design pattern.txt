@@ -1,33 +1,28 @@
-//Factory design pattern
-
-#include <bits/stdc++.h>
+#include <iostream>
 using namespace std;
 
-//base and sub class
-class Vehicle{
+class Vehical{
     public:
-    int age;
-        virtual void getIntro() = 0 ;
+        virtual void getDetail() = 0;
 };
 
-class TwoWheeler:public Vehicle{
+class TwoWheeler : public Vehical{
     public:
-        void getIntro() override{
-            cout<<"I am two wheeler"<<endl;
-        }
+    void getDetail() override{
+        cout<<"I am two wheeler";
+    }
 };
 
-class ThreeWheeler:public Vehicle{
+class ThreeWheeler : public Vehical{
     public:
-        void getIntro() override{
-            cout<<"I am three wheeler"<<endl;
-        }
+        void getDetail() override{
+            cout<<"I am Three Wheeler";
+        };
 };
 
-class factory{
+class Factory{
     public:
-        //there is no need to keep below function non static coz we dont need to created any instance of thsi facotry calss
-        static Vehicle* createVehicle(string type){
+        static Vehical* getTypeOfVehical(string type){
             if(type=="Two Wheeler"){
                 return new TwoWheeler();
             }
@@ -40,9 +35,9 @@ class factory{
         }
 };
 
-int main() {
-	Vehicle* vehicle = factory::createVehicle("Two Wheeler");
-	vehicle->getIntro();
-	return 0;
 
+int main() {
+    Vehical *vehical=Factory::getTypeOfVehical("Three Wheeler");
+    vehical->getDetail();
+    return 0;
 }
