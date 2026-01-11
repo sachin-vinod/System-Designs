@@ -1,0 +1,49 @@
+#include <iostream>
+using namespace std;
+
+class House{
+    private:
+        string walls;
+        string door;
+        string roof;
+        string window;
+        bool isGarage;
+        bool isSwimingPool;
+        
+    public:
+        House(string walls, string door, string roof, string window, bool isGarage, bool isSwimingPool){
+            
+        }
+};
+
+class HouseBuilder{
+    public:
+    virtual buildWalls() = 0;
+    
+};
+
+class castleBuilder: public HouseBuilder{
+    private:
+        string walls;
+        string door;
+        string roof;
+        string window;
+        bool isGarage;
+        bool isSwimingPool;
+    public:
+    
+    void buildWalls(){
+        this->walls="walls";
+    }
+        
+    House* getHouse(){
+        return new House(all the args);
+    }
+};
+
+class Director{
+    public:
+        static HouseBuilder* getHouseBuilder(string type){
+            
+        }
+};
