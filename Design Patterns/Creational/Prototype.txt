@@ -1,0 +1,67 @@
+#include <iostream>
+using namespace std;
+
+class Shape{
+    public:
+        virtual void getShape() = 0;
+        virtual Shape* clone() = 0;
+};
+
+class Circle : public Shape{
+    private:
+        int r;
+    public:
+        Circle(int r){
+            this->r=r;
+        }
+        
+        Circle(Circle &circle){
+            this->r=circle.r;
+        }
+        
+        void getShape(){
+            cout<<"this is circle"<<endl;
+        }
+        
+        Circle* clone(){
+            return new Circle(*this);
+        }
+};
+
+class Square : public Shape{
+    private:
+        int width;
+        int length;
+    public:
+        Square(int width, int length){
+            this->width=width;
+            this->length=length;
+        }
+        
+        Square(Square* square){
+            this->width=square->width;
+            this->length=square->length;
+        }
+        
+        void getShape(){
+            cout<<"i am square"<<endl;
+        }
+        
+        Shape* clone(){
+            return new Square(*this);
+        }
+};
+
+int main() {
+    Shape* original = new Circle(10);
+
+    Shape* copy = original->clone();   // while creating copy we dont need to know about original subclass of original object
+
+    original->getShape();
+    copy->getShape();
+
+    delete original;
+    delete copy;
+
+    return 0;
+}
