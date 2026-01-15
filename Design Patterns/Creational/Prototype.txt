@@ -15,8 +15,8 @@ class Circle : public Shape{
             this->r=r;
         }
         
-        Circle(Circle &circle){
-            this->r=circle.r;
+        Circle(Circle *circle){
+            this->r=circle->r;
         }
         
         void getShape(){
@@ -24,7 +24,7 @@ class Circle : public Shape{
         }
         
         Circle* clone(){
-            return new Circle(*this);
+            return new Circle(this);
         }
 };
 
@@ -48,7 +48,7 @@ class Square : public Shape{
         }
         
         Shape* clone(){
-            return new Square(*this);
+            return new Square(this);
         }
 };
 
