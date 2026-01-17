@@ -1,0 +1,48 @@
+#include <iostream>
+using namespace std;
+
+//implementation class
+class Implementation{
+    public:
+        virtual void OperationImplementation() = 0; 
+}; 
+
+class ConcreteImplementationA:public Implementation{
+    public:
+        void OperationImplementation(){
+            cout<<"Implementation of ConcreteImplementationA"<<endl;
+        }
+};
+
+class ConcreteImplementationB:public Implementation{
+    public:
+        void OperationImplementation(){
+            cout<<"Implementation of ConcreteImplementationB"<<endl;
+        }
+};
+
+//Abstract class
+class Abstract{
+    protected:
+        Implementation* implementation;
+    public:
+        virtual void Operation() = 0;
+};
+
+class ExtendedAbstract:public Abstract{
+    public:
+        ExtendedAbstract(Implementation* implementation){
+            this->implementation=implementation;
+        }
+        
+        void Operation(){
+            cout<<"Operation perform with ";
+            implementation->OperationImplementation();
+        }
+};
+
+int main() {
+    Abstract* abstractClass=new ExtendedAbstract(new ConcreteImplementationA);
+    abstractClass->Operation();
+    return 0;
+}
