@@ -1,0 +1,202 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+//this code must have check edge condition where some value can be null like if user want some book and if it not avaiable so we should send some alert and all
+
+class BookItem{
+    private:
+        string uniqueId;
+        int rackNumber;
+    public:
+        BookItem(string uniqueId, int rackNumber){
+            this->uniqueId=uniqueId;
+            this->rackNumber=rackNumber;
+        }
+    
+        string getUniqueID(){
+            return this->uniqueId;
+        }
+        
+        int getRackNumber(){
+            return this->rackNumber;
+        }
+};
+
+class Book{
+    private:
+        string title;
+        string subject;
+        string category;
+        string publicationDate;
+    public:
+        Book(string &title, string &subject, string &category, string &publicationDate){
+            this->title=title;
+            this->subject=subject;
+            this->category=category;
+            this->publicationDate=publicationDate;
+        }
+        
+        string getTitle(){
+            return this->title;
+        }
+        
+        string getSubject(){
+            return this->subject;
+        }
+        
+        string getCategory(){
+            return this->category;
+        }
+        
+        string getPublicationDate(){
+            return this->publicationDate;
+        }
+};
+
+class Author{
+    private:
+        string name;
+        set<Book*> authoredBooks;
+    public:
+        Author(string &name, set<Book*> &authoredBooks){
+            this->name=name;
+            this->authoredBooks=authoredBooks;
+        }
+    
+        string getAuthorName(){
+            return this->name;
+        }
+        
+        set<Book*> getAuthorBooks(){
+            return this->authoredBooks;
+        }
+};
+
+class Inventory{
+    private:
+        map<Book*,set<BookItem*>> AvailableBookItems;
+        
+    public:
+        void addBookToInventory(Book* book, BookItem* bookItem){
+            this->AvailableBookItems[book].insert(bookItem);
+        }
+        
+        void removeBookFromInventory(Book* book, BookItem* bookItem){
+            this->AvailableBookItems[book].erase(bookItem);
+        }
+        
+        BookItem* getAvailableBookItem(Book* book){
+            return *AvailableBookItems[book].begin();
+        }
+};
+
+class Member{
+    private:
+        string name;
+        map<Book*, BookItem*> issuedBooks;
+    
+    public:
+        Member(string name){
+            this->name=name;
+        }
+        
+        bool hasBook(Book* book, BookItem* bookItem){
+            return this->issuedBooks.find(book)!=this->issuedBooks.end();
+        }
+    
+        void issueBookToMember(Book* book, BookItem* bookItem){
+            this->issuedBooks[book]=bookItem;
+        }
+        
+        void returnBookFromMember(Book* book){
+            this->issuedBooks.erase(book);
+        }
+        
+        string getMemberName(){
+            return this->name;
+        }
+};
+
+class LibrarySystem{
+    private:
+        Inventory* inventory;
+        set<Member*> members;
+    public:
+        LibrarySystem(Inventory* inventory, set<Member*> &members){
+            this->inventory=inventory;
+            this->members=members;
+        }
+        
+        void addMember(string name){
+            this->members.insert(new Member(name));
+        }
+        
+        void removeMember(string name){
+            Member* removable = NULL;
+
+            for (auto it = members.begin(); it != members.end(); ++it) {
+                if ((*it)->getMemberName() == name) {   // dereference first
+                    removable = *it;
+                    break;
+                }
+            }
+            if(removable)            
+                members.erase(removable);
+        }
+        
+        void allocateBookToMember(Member* member, Book* book){
+            BookItem* bookItem=inventory->getAvailableBookItem(book);
+            member->issueBookToMember(book,bookItem);
+            inventory->removeBookFromInventory(book,bookItem);
+            cout<<"Allocated book: "<<book->getTitle()<<" to member: "<<member->getMemberName()<<endl;
+        }
+        
+        void deAllocateBookToMember(Member* member, Book* book){
+            member->returnBookFromMember(book);
+            cout<<"Member: "<<member->getMemberName()<<" returned book: "<<book->getTitle()<<endl;
+        }
+        
+        void filter(string bookTitle, Author* author, string publishDate){
+            //we can use inventroy to find out which book of this configurations are avaiable
+        }
+};
+
+int main() {
+    string title = "Clean Code";
+    string subject = "Software Engineering";
+    string category = "Programming";
+    string publicationDate = "2008-08-01";
+    
+    Book* book1=new Book(title, subject, category, publicationDate);
+
+    string t2 = "Introduction to Algorithms";
+    string s2 = "Algorithms";
+    string c2 = "Computer Science";
+    string d2 = "2009-07-31";
+
+    Book* book2=new Book(t2, s2, c2, d2);
+    
+    Inventory* inventory=new Inventory();
+    
+    inventory->addBookToInventory(book1,new BookItem("cleanCode01", 1));
+    inventory->addBookToInventory(book1,new BookItem("cleanCode02", 1));
+    inventory->addBookToInventory(book1,new BookItem("cleanCode03", 1));
+    
+    inventory->addBookToInventory(book2,new BookItem("introAlgo01", 2));
+    inventory->addBookToInventory(book2,new BookItem("introAlgo02", 2));
+    inventory->addBookToInventory(book2,new BookItem("introAlgo03", 2));
+    
+    set<Member*> members;
+    Member* member1=new Member("Sachin");
+    Member* member2=new Member("Virat");
+    members.insert(member1);
+    members.insert(member2);
+    
+    LibrarySystem* system=new LibrarySystem(inventory, members);
+    
+    system->allocateBookToMember(member1, book1);
+    system->allocateBookToMember(member2, book2);
+    
+    system->deAllocateBookToMember(member1, book1);
+    return 0;
+}
