@@ -121,7 +121,7 @@ class Member{
             string currDate=Datehandler::getCurrentDateAsString();
             string deadlineToReturn=this->returnDate[book];
             if(currDate>deadlineToReturn){
-                cout<<"Late Submission Fine is : 50RS"<<endl;
+                cout<<"Late Submission Fine is : 50RS to member "<<this->name<<endl;
             }
             this->issuedBooks.erase(book);
         }
@@ -166,8 +166,8 @@ class LibrarySystem{
         }
         
         void deAllocateBookToMember(Member* member, Book* book){
-            member->returnBookFromMember(book);
             cout<<"Member: "<<member->getMemberName()<<" returned book: "<<book->getTitle()<<endl;
+            member->returnBookFromMember(book);
         }
         
         void filterByAuthorAndPublishDate(Author* author, string publishDate){
