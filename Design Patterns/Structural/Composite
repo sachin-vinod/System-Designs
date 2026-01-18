@@ -1,0 +1,67 @@
+#include <iostream>
+using namespace std;
+
+class FileSystem{
+    public:
+        virtual void show() = 0;
+        
+        // default behavior for leaf
+    virtual void add(FileSystem* child) {
+        throw runtime_error("Cannot add child to leaf");
+    }
+};
+
+class File:public FileSystem{
+    private:
+        string name;
+    public:
+        File(string name){
+            this->name=name;
+        }
+        void show(){
+            cout<<"File name is: "<<this->name<<endl;
+        }
+};
+
+class Folder:public FileSystem{
+    private:
+        string name;
+        vector<FileSystem*> childrens;
+    public:
+        Folder(string name){
+            this->name=name;
+        }
+        
+        void add(FileSystem* child){
+            childrens.push_back(child);
+        }
+        
+        void show(){
+            cout<<"Folder: "<<this->name<<endl;
+            for(auto c:childrens){
+                c->show();
+            }
+        }
+};
+
+int main() {
+    FileSystem* root=new Folder("root");
+    FileSystem* node1=new Folder("node1");
+    FileSystem* node2=new Folder("node2");
+    FileSystem* node3=new Folder("node3");
+    root->add(node1);
+    root->add(node2);
+    node1->add(node3);
+    
+    FileSystem* leaf1=new File("leaf1");
+    FileSystem* leaf2=new File("leaf2");
+    FileSystem* leaf3=new File("leaf3");
+    FileSystem* leaf4=new File("leaf4");
+    node1->add(leaf1);
+    node2->add(leaf2);
+    node3->add(leaf3);
+    node3->add(leaf4);
+    
+    root->show();
+    return 0;
+}
