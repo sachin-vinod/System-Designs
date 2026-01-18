@@ -58,7 +58,7 @@ class Author{
         string name;
         set<Book*> authoredBooks;
     public:
-        Author(string &name, set<Book*> &authoredBooks){
+        Author(string name, set<Book*> authoredBooks){
             this->name=name;
             this->authoredBooks=authoredBooks;
         }
@@ -90,10 +90,18 @@ class Inventory{
         }
 };
 
+class Datehandler{
+    public:
+        static string getCurrentDateAsString() {
+            return "18-02-2026";  
+        }
+};
+
 class Member{
     private:
         string name;
         map<Book*, BookItem*> issuedBooks;
+        map<Book*, string> returnDate; //book, return date
     
     public:
         Member(string name){
@@ -103,12 +111,18 @@ class Member{
         bool hasBook(Book* book, BookItem* bookItem){
             return this->issuedBooks.find(book)!=this->issuedBooks.end();
         }
-    
-        void issueBookToMember(Book* book, BookItem* bookItem){
+        
+        void issueBookToMember(Book* book, BookItem* bookItem, string deadlineToReturn){
             this->issuedBooks[book]=bookItem;
+            this->returnDate[book]=deadlineToReturn;
         }
         
         void returnBookFromMember(Book* book){
+            string currDate=Datehandler::getCurrentDateAsString();
+            string deadlineToReturn=this->returnDate[book];
+            if(currDate>deadlineToReturn){
+                cout<<"Late Submission Fine is : 50RS"<<endl;
+            }
             this->issuedBooks.erase(book);
         }
         
@@ -144,9 +158,9 @@ class LibrarySystem{
                 members.erase(removable);
         }
         
-        void allocateBookToMember(Member* member, Book* book){
+        void allocateBookToMember(Member* member, Book* book, string deadlineToReturn){
             BookItem* bookItem=inventory->getAvailableBookItem(book);
-            member->issueBookToMember(book,bookItem);
+            member->issueBookToMember(book,bookItem, deadlineToReturn);
             inventory->removeBookFromInventory(book,bookItem);
             cout<<"Allocated book: "<<book->getTitle()<<" to member: "<<member->getMemberName()<<endl;
         }
@@ -156,8 +170,16 @@ class LibrarySystem{
             cout<<"Member: "<<member->getMemberName()<<" returned book: "<<book->getTitle()<<endl;
         }
         
-        void filter(string bookTitle, Author* author, string publishDate){
+        void filterByAuthorAndPublishDate(Author* author, string publishDate){
             //we can use inventroy to find out which book of this configurations are avaiable
+            set<Book*> authorBooks=author->getAuthorBooks();
+            
+            cout<<"Available Books are: "<<endl;
+            for(auto book:authorBooks){
+                if(book->getPublicationDate() == publishDate){
+                    cout<<"Book: "<<book->getTitle()<<endl;
+                }
+            }
         }
 };
 
@@ -194,9 +216,13 @@ int main() {
     
     LibrarySystem* system=new LibrarySystem(inventory, members);
     
-    system->allocateBookToMember(member1, book1);
-    system->allocateBookToMember(member2, book2);
+    system->allocateBookToMember(member1, book1, "17-01-2026");
+    system->allocateBookToMember(member2, book2, "19-01-2026");
     
     system->deAllocateBookToMember(member1, book1);
+    
+    //filter
+    Author* author=new Author("Devid", {book1, book2});
+    system->filterByAuthorAndPublishDate(author, "2009-07-31");
     return 0;
 }
