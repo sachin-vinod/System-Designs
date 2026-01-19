@@ -1,0 +1,51 @@
+#include <iostream>
+using namespace std;
+
+class Notification{
+    public:
+        //if this will not virtual code will always call this send mesg instead of calling childs method
+        virtual void send(){
+            cout<<"Send notification over email"<<endl;
+        }
+};
+
+class Decorator:public Notification{
+    protected:  
+        Notification* notification;
+    public:
+        virtual void send() = 0;
+};
+
+class SlackNotification:public Decorator{
+    public:
+        SlackNotification(Notification* notification){
+            this->notification=notification;
+        }
+        
+        void send(){
+            cout<<"Send Notification over slack"<<endl;
+            this->notification->send();
+        }
+};
+
+class FacebookNotification:public Decorator{
+    public:
+        FacebookNotification(Notification* notification){
+            this->notification=notification;
+        }
+        
+        void send(){
+            cout<<"Send Notification over Facebook"<<endl;
+            this->notification->send();
+        }
+};
+
+
+
+int main() {
+    Notification* notification=new Notification();
+    Notification* notification1=new FacebookNotification(notification);
+    notification1->send();
+    
+    return 0;
+}
