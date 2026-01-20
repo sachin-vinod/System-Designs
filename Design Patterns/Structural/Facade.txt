@@ -1,0 +1,49 @@
+#include <iostream>
+using namespace std;
+
+class Subsystem1{
+    public:
+        void operation1(){
+            cout<<"Subsytem1 ready"<<endl;
+        }
+        
+        void operationN(){
+            cout<<"Subsystem1 Run"<<endl;
+        }
+};
+
+class Subsystem2{
+    public:
+        void operation2(){
+            cout<<"Get ready Subsystem2"<<endl;
+        }
+        
+        void operationZ(){
+            cout<<"Fire Subsystem2"<<endl;
+        }
+};
+
+class Facade{
+    private:
+        Subsystem1* subsystem1;
+        Subsystem2* subsystem2;
+    public:
+        Facade(Subsystem1* subsystem1, Subsystem2* subsystem2){
+            this->subsystem1=subsystem1;
+            this->subsystem2=subsystem2;
+        }
+        
+        void operation(){
+            this->subsystem1->operation1();
+            this->subsystem2->operation2();
+            cout<<"Now launch 2nd operations"<<endl;
+            this->subsystem1->operationN();
+            this->subsystem2->operationZ();
+        }
+};
+
+int main() {
+    Facade* facade=new Facade(new Subsystem1(), new Subsystem2());
+    facade->operation();
+    return 0;
+}
