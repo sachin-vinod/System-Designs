@@ -9,7 +9,7 @@ class CashHandler{
 };
 
 class BaseHnadler:public CashHandler{
-    private:
+    protected:
     CashHandler* nextHandler;
     int cashValue;
     public:
@@ -39,12 +39,16 @@ class BaseHnadler:public CashHandler{
 
 class Handler2000:public BaseHnadler{
    public:
-   Handler2000():BaseHnadler(2000){}
+   	Handler2000(){
+		this->cashValue=2000;
+	}
 };
 
 class Handler500:public BaseHnadler{
     public:
-    Handler500():BaseHnadler(500){}
+    Handler500(){
+		this->cashValue=500;
+	}
 };
 
 int main() {
@@ -59,3 +63,4 @@ int main() {
     
 	return 0;
 }
+
