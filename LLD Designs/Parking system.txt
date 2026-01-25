@@ -1,57 +1,291 @@
-//Parking system
-
 #include <bits/stdc++.h>
 using namespace std;
 
-class Parking{
-    public:
-    virtual void parkVehicle()=0;
-    virtual void freeSpace(pair<int,int> parkingLot)=0; 
+enum TypeOfSlot{
+    CAR,
+    BIKE,
+    TRUCK
 };
-class VehicleParking:public Parking{
-    protected:
-    set<pair<int,int>> AvailableLots;
+
+enum TypeOfVehical{
+    CAR,
+    BIKE,
+    TRUCK
+};
+
+class Slot{
+    private:
+        string slotID;
+        TypeOfSlot typeOfSlot;
+        bool isOccupied;
     public:
-    VehicleParking(int n){
-        for(int i=0;i<n;i++){
-            for(int j=0;j<n;j++){
-                AvailableLots.insert({i,j});
+        Slot(string slotID, TypeOfSlot typeOfSlot){
+            this->slotID=slotID;
+            this->typeOfSlot=typeOfSlot;
+            this->isOccupied=false;
+        }
+        
+        string getSlotID(){
+            return this->slotID;
+        }
+        
+        TypeOfSlot getTypeOfSlot(){
+            return this-> typeOfSlot;
+        }
+        
+        bool getIsOccupied(){
+            return this->isOccupied;
+        }
+        
+        void setIsOccupied(bool state){
+            this->isOccupied=state;
+        }
+};
+
+class Vehical{
+    private:
+        string vehicalID;
+        TypeOfVehical typeOfVehical;
+    public:
+        Vehical(string vehicalID, TypeOfVehical typeOfVehical){
+            this->vehicalID=vehicalID;
+            this->typeOfVehical=typeOfVehical;
+        }
+        
+        string getVehicalID(){
+            return this->vehicalID;
+        }
+        
+        TypeOfVehical getTypeOfVehical(){
+            return this->typeOfVehical;
+        }
+};
+
+class Floor{
+    private:
+        string floorID; //F1, F2, F3=> floo1, floor2, floor3
+        int totalSlot;   //total number of slot floor have
+    public:
+        Floor(string floorID, int totalSlot){
+            this->floorID=floorID;
+            this->totalSlot=totalSlot;
+        }
+        
+        string getFloorID(){
+            return floorID;
+        }
+        
+        int getTotalSlot(){
+            return this->totalSlot;
+        }
+};
+
+class Ticket{
+    private:
+        string ticketID;  //F1-S23-VC2 will specify floorID+slotID+vehicalID(v->vehical c->car) we can do this since it will not male floor ans slot class thightly coupled to this class but still we will be having idea for floor and slot 
+        tm *issuedTime;   //we will use this to calculate how much one pay
+    public:
+        Ticket(string ticketID, tm *issuedTime){
+            this->ticketID=ticketID;
+            this->issuedTime=issuedTime;
+        }
+        
+        string getTicketID(){
+            return this->ticketID;
+        }
+        
+        tm getIssuedTime(){
+            return this->issuedTime;
+        }
+};
+
+class SlotAllocater{
+    public:
+        static pair<Floor*, Slot*> getAvailableSlotAndFloor(map<Floor*,set<Slot*>> &slotsOnFloor, Vehical* vehical){
+            pair<Floor*, Slot*> ans={NULL,NULL};
+            for(auto floorAndSlots:slotsOnFloor){
+                Floor* floor=floorAndSlots->first;
+                for(auto slot:floorAndSlots->second){
+                    if(!slot->getIsOccupied() && vehical->getTypeOfVehical()==slot->getTypeOfSlot()){
+                        slot->setIsOccupied(true);
+                        ans={floor,slot};
+                        break;
+                    }
+                }
+                
+                if(ans.first){
+                    break;
+                }
+            }
+            mtx.unlock();
+            return ans;
+        }
+    
+        static pair<string,string> allocateSlot(map<Floor*,set<Slot*>> &slotsOnFloor, Vehical* vehical){
+            pair<Floor*, Slot*> availableSlotAndFloor=getAvailableSlotAndFloor(map<Floor*,set<Slot*>> &slotsOnFloor);
+            if(availableSlotAndFloor.first && availableSlotAndFloor.second){
+                Slot->setIsOccupied(true);
+            }
+            else{
+                return {"",""};
+            }
+            
+            return Floor->getFloorID+Slot->getSlotID;
+        }
+        
+        static void disAllocate(string floorID, string slotID, map<Floor*,set<Slot*>> &slotsOnFloor){
+            Slot* currSlot=NULL;
+            for(auto slotAndFloor:slotOnFloor){
+                if(slotAndFloor->first==floorID){
+                    for(auto slot:slotAndFloor->second){
+                        if(slot->getSlotID()==slotID){
+                            currSlot=slot;
+                            break;
+                        }
+                    }
+                }
+                if(currSlot){
+                    currSlot->setIsOccupied(false);
+                    break;
+                }
             }
         }
+        
+        
+};
+
+class RegisterTicket{
+    public:
+    static Ticket* generateTicket(string floorID, string slotID, string vehicalID){
+        string ticketID=floorID+"-"+slotID+"-"+vehicalID;
+        
+        time_t now=time(NULL);  //get curr time
+        tm *issuedTime=localtime(&now);
+        
+        Ticket* ticket=new Ticket(ticketID,issuedTime);
+        return ticket;
     }
-    void parkVehicle(){
-        if(AvailableLots.empty()){
-            cout<<"Parking is not available All area is full"<<endl;
+}; 
+
+class ParkingSystem{
+    private:
+        mutex mtx;
+        map<Floor*,set<Slot*>> slotsOnFloor;
+        set<Ticket*> availableTickets;
+        
+        vector<string> split(const string& s, char delim) {
+            vector<string> parts;
+            string item;
+            stringstream ss(s);
+        
+            while (getline(ss, item, delim)) {
+                parts.push_back(item);
+            }
+            return parts;
         }
-        auto l=*(AvailableLots.begin());
-        AvailableLots.erase(l);
-        cout<<"Park your vehicle at "<<l.first<<" "<<l.second<<endl;
-    }
-    void freeSpace(pair<int,int> parkingLot){
-        AvailableLots.insert(parkingLot);
-        cout<<parkingLot.first<<" "<<parkingLot.second<<" Now it is free"<<endl;
-    }
-};
-class BigVehicleParking:public VehicleParking{
     public:
-    BigVehicleParking(int n):VehicleParking(n) {}
-};
-class SmallVehicleParking:public VehicleParking{
-    public:
-    SmallVehicleParking(int n):VehicleParking(n) {}
-    
-};
-class ParkingFactory{
-    public:
-    static Parking* createParking(string type, int n){
-        if(type=="Big"){
-            return new BigVehicleParking(n);
+        void addSlotOnFloor(Floor* floor, Slot* slot){
+            if(floor && slot){
+                slotsOnFloor[floor].insert(slot);
+            }
         }
-        return new SmallVehicleParking(n);
-    }
+        
+        Ticket* parkVehical(Vehical* vehical){
+            lock_guard<mutex> lock(mtx); // automatically locks and unlocks
+            pair<string,string> floorAndSlot=SlotAllocater::allocateSlot(slotsOnFloor,Vehical);
+            string floorID=floorAndSlot.first, slotID=floorAndSlot.second, vehicalID=vehical->getVehicalID();
+            Ticket* ticket = RegisterTicket::generateTicket(floorID, slotID, vehicalID);
+            availableTickets.insert(ticket);
+            return ticket;
+        }
+        
+        void unparkVehical(Ticket* ticket){
+            lock_guard<mutex> lock(mtx); // automatically locks and unlocks
+            if(availableTickets.find(ticket)==availableTickets.end()){
+                cout<<"Ticket in invalid"<<endl;
+                return;
+            }
+            string ticketID=ticket->getTicketID();
+            //assuming we can have max 9 floor so floor id will F1 to F9
+            vector<string> ids=this->split(ticketID,'-');
+            string floorID=ids[0], slotID=ids[1];
+            SlotAllocater::disAllocate(floorID, slotID, slotsOnFloor);
+        }
 };
+
 int main() {
-    Parking* parking=ParkingFactory::createParking("Big",5);
-    parking->parkVehicle();
-	return 0;
+    // Create ParkingSystem
+    ParkingSystem* parkingSystem = new ParkingSystem();
+
+    // Create Floors
+    Floor* floor1 = new Floor("F1", 5);
+    Floor* floor2 = new Floor("F2", 5);
+
+    // Create Slots for floor1
+    Slot* f1_s1 = new Slot("S1", CAR);
+    Slot* f1_s2 = new Slot("S2", BIKE);
+    Slot* f1_s3 = new Slot("S3", TRUCK);
+
+    // Create Slots for floor2
+    Slot* f2_s1 = new Slot("S1", CAR);
+    Slot* f2_s2 = new Slot("S2", BIKE);
+    Slot* f2_s3 = new Slot("S3", TRUCK);
+
+    // Add slots to parking system
+    parkingSystem->addSlotOnFloor(floor1, f1_s1);
+    parkingSystem->addSlotOnFloor(floor1, f1_s2);
+    parkingSystem->addSlotOnFloor(floor1, f1_s3);
+
+    parkingSystem->addSlotOnFloor(floor2, f2_s1);
+    parkingSystem->addSlotOnFloor(floor2, f2_s2);
+    parkingSystem->addSlotOnFloor(floor2, f2_s3);
+
+    // Create Vehicles
+    Vehical* car1 = new Vehical("V1", CAR);
+    Vehical* bike1 = new Vehical("V2", BIKE);
+    Vehical* truck1 = new Vehical("V3", TRUCK);
+
+    // Park vehicles
+    Ticket* ticketCar1 = parkingSystem->parkVehical(car1);
+    Ticket* ticketBike1 = parkingSystem->parkVehical(bike1);
+    Ticket* ticketTruck1 = parkingSystem->parkVehical(truck1);
+
+    cout << "Tickets issued:\n";
+    cout << ticketCar1->getTicketID() << "\n";
+    cout << ticketBike1->getTicketID() << "\n";
+    cout << ticketTruck1->getTicketID() << "\n";
+
+    // Unpark vehicles
+    parkingSystem->unparkVehical(ticketCar1);
+    parkingSystem->unparkVehical(ticketBike1);
+
+    // Park another vehicle in freed slot
+    Vehical* car2 = new Vehical("V4", CAR);
+    Ticket* ticketCar2 = parkingSystem->parkVehical(car2);
+    cout << "New car parked with ticket: " << ticketCar2->getTicketID() << "\n";
+
+    // Clean up memory (destructors)
+    delete ticketCar1;
+    delete ticketBike1;
+    delete ticketTruck1;
+    delete ticketCar2;
+
+    delete car1;
+    delete car2;
+    delete bike1;
+    delete truck1;
+
+    delete f1_s1;
+    delete f1_s2;
+    delete f1_s3;
+    delete f2_s1;
+    delete f2_s2;
+    delete f2_s3;
+
+    delete floor1;
+    delete floor2;
+
+    delete parkingSystem;
+
+    return 0;
 }
