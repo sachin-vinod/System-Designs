@@ -205,7 +205,6 @@ class ParkingSystem{
                 return;
             }
             string ticketID=ticket->getTicketID();
-            //assuming we can have max 9 floor so floor id will F1 to F9
             vector<string> ids=this->split(ticketID,'-');
             string floorID=ids[0], slotID=ids[1];
             SlotAllocater::disAllocate(floorID, slotID, slotsOnFloor);
@@ -288,4 +287,5 @@ int main() {
 
     return 0;
 }
+
 
