@@ -39,6 +39,12 @@ class BaseHnadler:public CashHandler{
 
 class Handler2000:public BaseHnadler{
    public:
+   //Handler2000(){
+		//this->cashValue=2000;
+	//}
+
+	OR
+
    Handler2000():BaseHnadler(2000){}
 };
 
@@ -59,3 +65,4 @@ int main() {
     
 	return 0;
 }
+
