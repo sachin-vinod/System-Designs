@@ -1,0 +1,63 @@
+#include <iostream>
+using namespace std;
+
+class Light{
+    public:
+        void onLight(){
+            cout<<"On Light"<<endl;
+        }
+        
+        void offLight(){
+            cout<<"off Light"<<endl;
+        }
+};
+
+class Command{
+    public:
+        virtual void execute() = 0;
+};
+
+class LightOnCommand : public Command{
+    private:
+        Light* light;
+    public:
+        LightOnCommand(Light* light){
+            this->light=light;
+        }
+        
+        void execute() override{
+            light->onLight();
+        }
+};
+
+class LightOffCommand : public Command{
+    private:
+        Light* light;
+    public:
+        LightOffCommand(Light* light){
+            this->light=light;
+        }
+    
+        void execute() override{
+            light->offLight();
+        }
+};
+
+class Remote{
+    public:
+        static void execute(Command* cmd){
+            cmd->execute();
+        }
+};
+
+int main() {
+    Light* light=new Light();
+    
+    LightOnCommand* onCmd=new LightOnCommand(light);
+    LightOffCommand* offCmd=new LightOffCommand(light);
+    
+    Remote::execute(onCmd);
+    Remote::execute(offCmd);
+
+    return 0;
+}
