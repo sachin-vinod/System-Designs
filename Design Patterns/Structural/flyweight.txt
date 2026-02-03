@@ -1,0 +1,63 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class BulletType{
+    public:
+        string texture;
+        string color;
+        int damage;
+        int speed;
+        //above fileds must be private with getter setter
+        
+        BulletType(string texture, string color, int damage, int speed){
+            this->texture=texture;
+            this->color=color;
+            this->damage=damage;
+            this->speed=speed;
+        }
+};
+
+class BulletTypeFactory{
+    private:
+        static map<string,BulletType*> bulletTypeMap;
+    public:
+        static BulletType* createBullet(string texture, string color, int damage, int speed){
+            string key=texture+color;
+            if(bulletTypeMap.find(key)==bulletTypeMap.end()){
+                bulletTypeMap[key]=new BulletType(texture,color,damage,speed);
+            }
+            
+            return bulletTypeMap[key];
+        }
+};
+
+map<string, BulletType*> BulletTypeFactory::bulletTypeMap;
+
+class Bullet {
+private:
+    int x, y;
+    string direction;
+    BulletType* type; // shared
+
+public:
+    Bullet(int x, int y, string direction, BulletType* type)
+        : x(x), y(y), direction(direction), type(type) {}
+
+    void render() {
+        cout << "Bullet at (" << x << "," << y << ") "
+             << "Direction: " << direction
+             << " Color: " << type->color
+             << " Damage: " << type->damage << endl;
+    }
+};
+
+int main() {
+    BulletType* redBullet =
+        BulletTypeFactory::createBullet("bullet.png", "red", 10, 5);
+
+    Bullet b1(10, 20, "UP", redBullet);
+    Bullet b2(15, 25, "DOWN", redBullet);
+
+    b1.render();
+    b2.render();
+}
