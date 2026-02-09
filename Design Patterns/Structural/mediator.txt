@@ -1,0 +1,61 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class ChatMediator;
+class User;
+
+class User{
+    private:
+        ChatMediator* mediator;
+        string name;
+    public:
+        User(ChatMediator* mediator, string name){
+            this->mediator=mediator;
+            this->name=name;
+        }
+        void sendMsg(string msg);
+        
+        void receive(string msg){
+            cout << name << " received: " << msg << endl;
+        }
+};
+
+class ChatMediator{
+    //assume this as one group chat not thinking of scaling for now
+    private:
+        vector<User*> users;
+    public:
+        void addUser(User* user){
+            this->users.push_back(user);
+        }
+        
+        void sendMsg(User* sender, string msg){
+            for(auto u:users){
+                if(u!=sender){
+                    u->receive(msg);
+                }
+            }
+        }
+};
+
+// declaring here since if we try to implement it above in user class
+//compiler does not know whter this sendMsg function is present in mediator class or not leads to compleation error
+void User::sendMsg(string msg) {
+    mediator->sendMsg(this, msg);
+}
+
+int main() {
+    ChatMediator* mediator=new ChatMediator();
+    
+    User* u1=new User(mediator, "sachin");
+    User* u2=new User(mediator, "Ramesh");
+    User* u3=new User(mediator, "Suresh");
+    
+    mediator->addUser(u1);
+    mediator->addUser(u2);
+    mediator->addUser(u3);
+    
+    u2->sendMsg("Hello");
+    
+    return 0;
+}
