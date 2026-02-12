@@ -1,0 +1,132 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// Forward Declaration
+class Order;
+
+// ===================== STATE INTERFACE =====================
+class State {
+public:
+    virtual void next(Order* order) = 0;
+    virtual void prev(Order* order) = 0;
+    virtual void printState() = 0;
+    virtual ~State() {}
+};
+
+// ===================== CONTEXT =====================
+class Order {
+private:
+    State* state;
+
+public:
+    Order(State* state) {
+        this->state = state;
+    }
+
+    void setState(State* state) {
+        this->state = state;
+    }
+
+    void goToNextState() {
+        state->next(this);
+    }
+
+    void goToPrevState() {
+        state->prev(this);
+    }
+
+    void printState() {
+        state->printState();
+    }
+};
+
+// ===================== CONCRETE STATES =====================
+
+class CartState : public State {
+public:
+    void next(Order* order) override;
+    void prev(Order* order) override {
+        cout << "Cannot go back. Already in CART.\n";
+    }
+    void printState() override {
+        cout << "Current State: CART\n";
+    }
+};
+
+class CheckoutState : public State {
+public:
+    void next(Order* order) override;
+    void prev(Order* order) override;
+    void printState() override {
+        cout << "Current State: CHECKOUT\n";
+    }
+};
+
+class PaymentState : public State {
+public:
+    void next(Order* order) override;
+    void prev(Order* order) override;
+    void printState() override {
+        cout << "Current State: PAYMENT\n";
+    }
+};
+
+class CompletedState : public State {
+public:
+    void next(Order* order) override {
+        cout << "Order already completed. No further transitions.\n";
+    }
+    void prev(Order* order) override {
+        cout << "Cannot go back. Order finalized.\n";
+    }
+    void printState() override {
+        cout << "Current State: COMPLETED\n";
+    }
+};
+
+// ===================== STATE TRANSITIONS =====================
+
+void CartState::next(Order* order) {
+    cout << "Moving from CART to CHECKOUT\n";
+    order->setState(new CheckoutState());
+}
+
+void CheckoutState::next(Order* order) {
+    cout << "Moving from CHECKOUT to PAYMENT\n";
+    order->setState(new PaymentState());
+}
+
+void CheckoutState::prev(Order* order) {
+    cout << "Going back to CART\n";
+    order->setState(new CartState());
+}
+
+void PaymentState::next(Order* order) {
+    cout << "Payment successful. Moving to COMPLETED\n";
+    order->setState(new CompletedState());
+}
+
+void PaymentState::prev(Order* order) {
+    cout << "Going back to CHECKOUT\n";
+    order->setState(new CheckoutState());
+}
+
+// ===================== MAIN =====================
+
+int main() {
+
+    Order* order = new Order(new CartState());
+
+    order->printState();
+    order->goToNextState();
+
+    order->printState();
+    order->goToNextState();
+
+    order->printState();
+    order->goToNextState();
+
+    order->printState();
+
+    return 0;
+}
