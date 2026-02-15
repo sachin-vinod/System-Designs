@@ -74,7 +74,7 @@ class CredentialVault{
         unordered_map<string, string> credentials; // userID -> password
         shared_mutex mtx; // for thread safety
         //If a thread holds a unique_lock on a std::shared_mutex, no other thread can enter, even if it tries to acquire a shared_lock.
-        //If a writer acquires a unique_lock, it blocks only threads that also try to acquire a lock.
+        //If a writer acquires a unique_lock, it blocks only threads that also try to acquire a lock.i.e. shread_lock on read is necessary even we allow multiple read since it must be locked when write is happening and unique lock only lock read if there is any lock
         //Threads that read without any lock are NOT blocked and will still read.
     public:
         void addCredential(string userId, string password){
