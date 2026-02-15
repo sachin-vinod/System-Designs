@@ -1,0 +1,93 @@
+non Functional requirement
+1. (concurency)system must deal with race condition in case of dealing with inventory
+2. authentication
+3. can be taken care of cap theorem
+4. reliability
+		inventroy must not be negetive (so we must be using cp)
+		no negative order
+
+Functional requirement
+1. user allow to add product to cart
+2. in cart user can increase, decrese and delete unit items
+3. user can filter product based on company, type of product(like buety, cloths, shoes, etc.), based on (kids mens and womens), price range
+4. user can proceed to checkout confirm and pay
+5. user can get confirmation email and msg for this we can use
+6. can be added notify user when product availanle(optional)
+7. system must have veriety of product 
+8. must have inventroy
+
+
+high level view
+1. to move from add to cart->checkout->payment will use some state machine for it 
+2. in payment as there can be lots of method of payment we will go with(creating diffrent stategy) strategy pattern
+3. as while pyment there can be payment=> taxApplier=> discountApplier->paymentProcerssor so will crate chain between payments use chain of responsibility 
+
+cart Service
+inventory service
+payment service
+filtering service
+order service
+orchestrater
+
+enum prductType -> contains all the genere of product and will use them to figure out which type of product some product is
+
+class product
+	- productID   //same for same product
+	- productName
+	- productType
+	- price
+	
+class user -> contains info of user
+	- userName
+	- userID
+	- mobileNumber
+	
+class Order{};
+	
+class credentialVault
+	- map<userID,password>  -> can be use some hashing on password since storing password directly can leads to break authentication also can be look to avoid sql injection like attacks
+	
+class authenticater -> authenitcate user
+	- credentialVault
+	- bool: authenticateUser(string userID) -> function to authentication logic
+
+class Inventory
+	- map<product*,int: cnt>
+	
+class Cart
+	- map<string:userID,map<string:productID, int:cnt>>
+
+class state
+	- virtual void setNextState(state* nextState)
+	- virtual void setPervState(state* prevState)
+
+class Cart
+	- string UserId
+	- map<productId,int> 
+
+class CartHandler: state
+	- Cart* cart
+	- state* nextState
+	- state* prevState
+	- opeartions to manage cart
+	- proceedToCheckout
+
+class Checkout: state
+	- method to show total preoducts and price we can have inventory to do this
+	- invenotry
+	- state* nextState
+	
+class payment: state
+	- we will create type of payments to choose by user
+	- payAmount(double amount)
+	
+class COD: payment
+
+class creditCardPayment: pyment
+
+class UPI: pyment
+
+
+
+
+
