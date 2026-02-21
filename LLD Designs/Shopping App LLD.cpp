@@ -91,6 +91,159 @@ class CredentialVault{
         }
 };
 
+class Order{
+    private:
+        int orderID;
+		int userID;
+		map<int,int> productQuantity;   //productID, quantity
+    public:
+		Order(int orderID, int userID, map<int,int> productQuantity){
+			this->orderID=orderID;
+			this->userID=userID;
+			this->productQuantity=productQuantity;
+		}
+		
+		int getOrderID(){
+			return this->orderID;
+		}
+		
+		int getUserID(){
+			return this->userID;
+		}
+		
+		int getProductQuentity(int productID){
+			return this->productQuantity[productID];
+		}
+};
+
+class OrderHandler{
+	private:
+		set<Order*> pendingOrders;
+		set<Order*> completedOrders;
+		int orderOffSet;
+	public:
+		OrderHandler(){
+			orderOffSet=1;
+		}
+		
+		void CreateAndAddOrder(){
+			int orderID=orderOffSet;
+			this->orderOffSet++;
+			Order* order=new Order(orderID, userID, productQuantity);
+			pendingOrders.insert(order);
+			cout<<"Order create and orderID is: "<<orderID<<endl;
+		}
+		
+		void markOrderCompleted(orderID){
+			Order* completedOrder=NULL:
+			for(auto order:pendingOrders){
+				if(order->getOrderID==orderID){
+					completedOrder=order;
+					break;
+				}
+			}
+			
+			if(completedOrder){
+				pendingOrders.erase(completedOrder);
+				completedOrders.insert(completedOrder);
+			}
+			else{
+				cout<<Order with OrderID: "<<orderID<<" either completed or not exists!!"<<endl;
+			}
+		}
+};
+
+class State{
+	public:
+		virtual State* goToNextState()=0;
+		virtual State* goToPrevState()=0;
+}
+
+class CartState: public State{
+	private:
+		int userID;
+		map<int,int> productQuantity;    //productID, int
+		State* prevState;
+		State* nextState;
+	public:
+		CartState(int userID, State* prevState, State* nextState){
+			this->userID=userID;
+			this->prevState=prevState;
+			this->nextState;
+		}
+		
+		void addProduct(int productID){
+			productQuantity[productID]++;
+		}
+		
+		void removeProduct(int productID){
+			productQuantity.erase(productID);
+		}
+		
+		void increaseProductQuantity(int productID){
+			productQuantity[productID]++;
+		}
+		
+		void decreaseProductQuantity(int productID){
+			if(productQuantity.find(productID)==productQuantity.end() || productQuantity[productID]){
+				cout<<"Product with ProductID: "<<productID<<" is not present"<<endl;
+				return;
+			}
+			productQuantity[productID]--;
+			if(productQuantity[productID]==0){
+				productQuantity.erase(productID);
+			}
+		}
+		
+		State* goToPrevState(){
+			cout<<"No prev state exists"<<endl;
+			return this;
+		}
+		
+		State* goToNextState(){
+			cout<<"Moving to Checkout"<<endl;
+			return this->nextState;
+		}
+};
+
+class CheckoutState : public State{
+	private:
+		int userID;
+		map<int,int> productQuantity;    //productID, int
+		State* prevState;
+		State* nextState;
+	public:
+		CheckoutState(int userID, map<int,int> productQuantity, State* prevState, State* nextState){
+			this->userID=userID;
+			this->productQuantity=productQuantity;
+			this->prevState=prevState;
+			this->nextState;
+		}
+		
+		void confirmCheckout(){
+			cout<<"User with userID: "<<userID<<endl;
+			cout<<"Ordered"<<endl;
+			for(auto productDetails:productQuantity){
+				cout<<"product with productID: "<<productDetails.first<<" of quantity: "<<productDetails.second<<endl;
+			}
+			cout<<"Proceding to Payment..."<<endl;
+		}
+		
+		State* goToPrevState(){
+			cout<<"Moving To cart<<endl;
+			return this->prevState;
+		}
+		
+		State* goToNextState(){
+			cout<<"Moving to Checkout"<<endl;
+			return this->nextState;
+		}
+};
+
+class PaymentState : public State{
+	
+};
+
 int main(){
     return 0;
 }
