@@ -206,18 +206,39 @@ class CartState: public State{
 		}
 };
 
+class PriceHandler{
+	private:
+		static map<int,double> productToPrice;  //productID, price;
+	product:
+		static void UpdatePrive(int productID, double price){
+			productToPrice[productID]=price;
+		}
+		
+		static double getPriceOfproduct(int productID){
+			if(productToPrice.find(productID)!=productToPrice.end()){
+				cout<<"invalidProduct"<<endl;
+				return 0.0;
+			}
+			return productToPrice[productID];
+		}
+};
+
 class CheckoutState : public State{
 	private:
 		int userID;
 		map<int,int> productQuantity;    //productID, int
 		State* prevState;
 		State* nextState;
+		double totalAmount;
 	public:
 		CheckoutState(int userID, map<int,int> productQuantity, State* prevState, State* nextState){
 			this->userID=userID;
 			this->productQuantity=productQuantity;
 			this->prevState=prevState;
 			this->nextState;
+			for(auto productQuantityDetails : this->productQuantity){
+				this->totalAmount+=productQuantityDetails.second*(PriceHandler::getPriceOfproduct(productQuantityDetails.first));
+			}
 		}
 		
 		void confirmCheckout(){
@@ -226,7 +247,12 @@ class CheckoutState : public State{
 			for(auto productDetails:productQuantity){
 				cout<<"product with productID: "<<productDetails.first<<" of quantity: "<<productDetails.second<<endl;
 			}
+			cout<<"Total payable amount is: "<<totalAmount<<endl;
 			cout<<"Proceding to Payment..."<<endl;
+		}
+		
+		double getTotalPayableAmount(){
+			return this->totalAmount;
 		}
 		
 		State* goToPrevState(){
@@ -235,14 +261,91 @@ class CheckoutState : public State{
 		}
 		
 		State* goToNextState(){
-			cout<<"Moving to Checkout"<<endl;
+			cout<<"Moving to Payment"<<endl;
 			return this->nextState;
 		}
 };
 
+class PaymentStrategy{
+	public:
+		virtual void pay(double totalAmount){} = 0;
+}
+
+class UPIPayment : PaymentStrategy{
+	public:
+		void pay(double totalAmount){
+			cout<<"Payment Sucessfull of Amount: "<<totalAmount<<endl;
+			cout<<"Mode Of payment is UPI<<endl;
+		}
+}
+
+class CODPayment : PaymentStrategy{
+	public:
+		void pay(double totalAmount){
+			cout<<"Payment of Amount: "<<totalAmount<<" will be paid on time of delivery"<<endl;
+			cout<<"Mode Of payment is CASH ON DELIVERY<<endl;
+		}
+}
+
+class CardPayment : PaymentStrategy{
+	public:
+		void pay(double totalAmount){
+			cout<<"Payment Sucessfull of Amount: "<<totalAmount<<endl;
+			cout<<"Mode Of payment is CARD<<endl;
+		}
+}
+
 class PaymentState : public State{
-	
+	private:
+		int userID;
+		State* prevState;
+		State* nextState;
+		double totalAmount;
+		PaymentStrategy* paymentStrategy;
+	public:
+		PaymentState(int userID, State* prevState, State* nextState, double totalAmount, PaymentStrategy* paymentStrategy){
+			this->userID=userID;
+			this->prevState=prevState;
+			this->nextState=nextState;
+			this->totalAmount=totalAmount;
+			this->paymentStrategy=paymentStrategy;
+		}
+		
+		void confirmOrder(){
+			paymentStrategy->pay(totalAmount);
+		}
+		
+		State* goToPrevState(){
+			cout<<"Moving To Checkout<<endl;
+			return this->prevState;
+		}
+		
+		State* goToNextState(){
+			cout<<"Moving to Confirmation..."<<endl;
+			return this->nextState;
+		}
+		
 };
+
+class ConfirmationState : public State{
+	private:
+		State* prevState;
+		State* nextState;
+	public:
+		void getConfirmation(int userID){
+			cout<<"Order confirmed For User: "<<userID<<Endl;
+		}
+		
+		State* goToPrevState(){
+			cout<<"can't go to prev state"<<endl;
+			return NULL;
+		}
+		
+		State* goToNextState(){
+			cout<<"Can't go to next state"<<endl;
+			return NULL;
+		}
+}
 
 int main(){
     return 0;
