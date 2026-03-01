@@ -118,58 +118,52 @@ class Order{
 
 class OrderHandler{
 	private:
-		set<Order*> pendingOrders;
-		set<Order*> completedOrders;
+		set<int> pendingOrders;
+		set<int> completedOrders;
+		//move this to orchestrator
 		int orderOffSet;
 	public:
 		OrderHandler(){
 			orderOffSet=1;
 		}
 		
-		void CreateAndAddOrder(){
-			int orderID=orderOffSet;
-			this->orderOffSet++;
-			Order* order=new Order(orderID, userID, productQuantity);
-			pendingOrders.insert(order);
+		void addOrderToOrderInverntory(int orderID){
+			//to handle race contition whihile creating order in orchestrator we can use mutex lock to lock the order creation process so that only one thread can create order at a time and
+			//move this to orchestrator
+			// int orderID=orderOffSet;
+			// this->orderOffSet++;
+			// Order* order=new Order(orderID, userID, productQuantity);
+			if(pendingOrders.find(orderID)!=pendingOrders.end() || completedOrders.find(orderID)!=completedOrders.end()){
+				cout<<"Order with orderID: "<<orderID<<" already exists!!"<<endl;
+				return;
+			}
+			pendingOrders.insert(orderID);
 			cout<<"Order create and orderID is: "<<orderID<<endl;
 		}
 		
-		void markOrderCompleted(orderID){
-			Order* completedOrder=NULL:
-			for(auto order:pendingOrders){
-				if(order->getOrderID==orderID){
-					completedOrder=order;
-					break;
-				}
+		void markOrderCompleted(int orderID){
+			if(pendingOrders.find(orderID)==pendingOrders.end()){
+				cout<<"Order with OrderID: "<<orderID<<" either completed or not exists!!"<<endl;
+				return;
 			}
-			
-			if(completedOrder){
-				pendingOrders.erase(completedOrder);
-				completedOrders.insert(completedOrder);
-			}
-			else{
-				cout<<Order with OrderID: "<<orderID<<" either completed or not exists!!"<<endl;
-			}
+			pendingOrders.erase(orderID);
+			completedOrders.insert(orderID);
 		}
 };
 
 class State{
 	public:
-		virtual State* goToNextState()=0;
-		virtual State* goToPrevState()=0;
-}
+		virtual unique_ptr<State> goToNextState()=0;
+		virtual unique_ptr<State> goToPrevState()=0;
+};
 
-class CartState: public State{
+class Cart{
 	private:
 		int userID;
 		map<int,int> productQuantity;    //productID, int
-		State* prevState;
-		State* nextState;
 	public:
-		CartState(int userID, State* prevState, State* nextState){
+		Cart(int userID){
 			this->userID=userID;
-			this->prevState=prevState;
-			this->nextState;
 		}
 		
 		void addProduct(int productID){
@@ -194,28 +188,95 @@ class CartState: public State{
 				productQuantity.erase(productID);
 			}
 		}
+
+		map<int,int> getProductQuantity(){
+			return this->productQuantity;
+		}
+};
+
+class OrderContext{
+	private:
+		int UserID;
+		unique_ptr<State> currentState;
+		Cart* cart;
+		PaymentStrategy* paymentStrategy;
+	public:
+		OrderContext(int userID, unique_ptr<State> state, Cart* cart, PaymentStrategy* paymentStrategy){
+			this->UserID=userID;
+			this->currentState=move(state);
+			this->cart=cart;
+			this->paymentStrategy=paymentStrategy;
+		}
+
+		void goToNextState(){
+			currentState=currentState->goToNextState();
+		}
 		
-		State* goToPrevState(){
+		void goToPrevState(){
+			currentState=currentState->goToPrevState();
+		}
+
+		Cart* getCart(){
+			return this->cart;
+		}
+
+		PaymentStrategy* getPaymentStrategy(){
+			return this->paymentStrategy;
+		}
+};
+
+class CartState: public State{
+	public:
+		void addProduct(OrderContext* orderContext,  int productID){
+			orderContext->getCart()->addProduct(productID);
+		}
+		
+		void removeProduct(OrderContext* orderContext, int productID){
+			orderContext->getCart()->removeProduct(productID);
+		}
+		
+		void increaseProductQuantity(OrderContext* orderContext, int productID){
+			orderContext->getCart()->increaseProductQuantity(productID);
+		}
+		
+		void removeProduct(OrderContext* orderContext, int productID){
+			orderContext->getCart()->removeProduct(productID);
+		}
+		
+		void increaseProductQuantity(OrderContext* orderContext, int productID){
+			orderContext->getCart()->increaseProductQuantity(productID);
+		}
+		
+		void decreaseProductQuantity(OrderContext* orderContext, int productID){
+			if(orderContext->getCart()->getProductQuantity().find(productID)==orderContext->getCart()->getProductQuantity().end() || orderContext->getCart()->getProductQuantity()[productID]){
+				cout<<"Product with ProductID: "<<productID<<" is not present"<<endl;
+				return;
+			}
+			orderContext->getCart()->decreaseProductQuantity(productID);
+		}
+		
+		unique_ptr<State> goToPrevState(OrderContext* orderContext){
 			cout<<"No prev state exists"<<endl;
 			return this;
 		}
 		
-		State* goToNextState(){
+		unique_ptr<State> goToNextState(OrderContext* orderContext){
+
 			cout<<"Moving to Checkout"<<endl;
-			return this->nextState;
+			return unique_ptr<State>(new CheckoutState(orderContext->getCart()->getProductQuantity()));
 		}
 };
 
 class PriceHandler{
 	private:
 		static map<int,double> productToPrice;  //productID, price;
-	product:
+	public:
 		static void UpdatePrive(int productID, double price){
 			productToPrice[productID]=price;
 		}
 		
 		static double getPriceOfproduct(int productID){
-			if(productToPrice.find(productID)!=productToPrice.end()){
+			if(productToPrice.find(productID)==productToPrice.end()){
 				cout<<"invalidProduct"<<endl;
 				return 0.0;
 			}
@@ -224,129 +285,124 @@ class PriceHandler{
 };
 
 class CheckoutState : public State{
-	private:
-		int userID;
-		map<int,int> productQuantity;    //productID, int
-		State* prevState;
-		State* nextState;
-		double totalAmount;
 	public:
-		CheckoutState(int userID, map<int,int> productQuantity, State* prevState, State* nextState){
-			this->userID=userID;
-			this->productQuantity=productQuantity;
-			this->prevState=prevState;
-			this->nextState;
-			for(auto productQuantityDetails : this->productQuantity){
-				this->totalAmount+=productQuantityDetails.second*(PriceHandler::getPriceOfproduct(productQuantityDetails.first));
-			}
-		}
-		
-		void confirmCheckout(){
-			cout<<"User with userID: "<<userID<<endl;
+		void confirmCheckout(OrderContext* orderContext){
+			cout<<"User with userID: "<<orderContext->getCart()->getUserID()<<endl;
 			cout<<"Ordered"<<endl;
-			for(auto productDetails:productQuantity){
+			for(auto productDetails:orderContext->getCart()->getProductQuantity()){
 				cout<<"product with productID: "<<productDetails.first<<" of quantity: "<<productDetails.second<<endl;
+			}
+			double totalAmount=0;
+			for(auto productDetails:orderContext->getCart()->getProductQuantity()){
+				totalAmount+=productDetails.second*(PriceHandler::getPriceOfproduct(productDetails.first));
 			}
 			cout<<"Total payable amount is: "<<totalAmount<<endl;
 			cout<<"Proceding to Payment..."<<endl;
 		}
 		
-		double getTotalPayableAmount(){
-			return this->totalAmount;
+		unique_ptr<State> goToPrevState(OrderContext* orderContext){
+			cout<<"Moving To cart"<<endl;
+			return unique_ptr<State>(new CartState());
 		}
 		
-		State* goToPrevState(){
-			cout<<"Moving To cart<<endl;
-			return this->prevState;
-		}
-		
-		State* goToNextState(){
+		unique_ptr<State> goToNextState(OrderContext* orderContext){
 			cout<<"Moving to Payment"<<endl;
-			return this->nextState;
+			return unique_ptr<State>(new PaymentState());
 		}
 };
 
 class PaymentStrategy{
 	public:
 		virtual void pay(double totalAmount){} = 0;
-}
+};
 
 class UPIPayment : PaymentStrategy{
 	public:
 		void pay(double totalAmount){
 			cout<<"Payment Sucessfull of Amount: "<<totalAmount<<endl;
-			cout<<"Mode Of payment is UPI<<endl;
+			cout<<"Mode Of payment is UPI"<<endl;
 		}
-}
+};
 
 class CODPayment : PaymentStrategy{
 	public:
 		void pay(double totalAmount){
 			cout<<"Payment of Amount: "<<totalAmount<<" will be paid on time of delivery"<<endl;
-			cout<<"Mode Of payment is CASH ON DELIVERY<<endl;
+			cout<<"Mode Of payment is CASH ON DELIVERY"<<endl;
 		}
-}
+};
 
 class CardPayment : PaymentStrategy{
 	public:
 		void pay(double totalAmount){
 			cout<<"Payment Sucessfull of Amount: "<<totalAmount<<endl;
-			cout<<"Mode Of payment is CARD<<endl;
+			cout<<"Mode Of payment is CARD"<<endl;
 		}
-}
+};
 
 class PaymentState : public State{
-	private:
-		int userID;
-		State* prevState;
-		State* nextState;
-		double totalAmount;
-		PaymentStrategy* paymentStrategy;
 	public:
-		PaymentState(int userID, State* prevState, State* nextState, double totalAmount, PaymentStrategy* paymentStrategy){
-			this->userID=userID;
-			this->prevState=prevState;
-			this->nextState=nextState;
-			this->totalAmount=totalAmount;
-			this->paymentStrategy=paymentStrategy;
+
+		void confirmOrder(OrderContext* orderContext){
+			double totalAmount=0;
+			for(auto productDetails:orderContext->getCart()->getProductQuantity()){
+				totalAmount+=productDetails.second*(PriceHandler::getPriceOfproduct(productDetails.first));
+			}
+			orderContext->getPaymentStrategy()->pay(totalAmount);
 		}
 		
-		void confirmOrder(){
-			paymentStrategy->pay(totalAmount);
+		unique_ptr<State> goToPrevState(OrderContext* orderContext){
+			cout<<"Moving To Checkout"<<endl;
+			return unique_ptr<State>(new CheckoutState());
 		}
 		
-		State* goToPrevState(){
-			cout<<"Moving To Checkout<<endl;
-			return this->prevState;
-		}
-		
-		State* goToNextState(){
+		unique_ptr<State> goToNextState(OrderContext* orderContext){
 			cout<<"Moving to Confirmation..."<<endl;
-			return this->nextState;
+			return unique_ptr<State>(new ConfirmationState());
 		}
 		
 };
 
 class ConfirmationState : public State{
-	private:
-		State* prevState;
-		State* nextState;
 	public:
-		void getConfirmation(int userID){
-			cout<<"Order confirmed For User: "<<userID<<Endl;
+		void getConfirmation(OrderContext* orderContext){
+			cout<<"Order confirmed For User: "<<orderContext->getUserID()<<endl;
 		}
 		
-		State* goToPrevState(){
+		unique_ptr<State> goToPrevState(OrderContext* orderContext){
 			cout<<"can't go to prev state"<<endl;
 			return NULL;
 		}
 		
-		State* goToNextState(){
+		unique_ptr<State> goToNextState(OrderContext* orderContext){
 			cout<<"Can't go to next state"<<endl;
 			return NULL;
 		}
-}
+};
 
 int main(){
-    return 0;
+	User* user1=new User(1, "John Doe", "john.doe@example.com", "1234567890");
+	cout<<"User created with ID: "<<user1->getUserId()<<endl;
+	User* user2=new User(2, "Jane Smith", "jane.smith@example.com", "0987654321");
+	cout<<"User created with ID: "<<user2->getUserId()<<endl;
+
+	Product* product1=new Product(1, "Laptop", ELECTRONICS, 1000.0);
+	cout<<"Product created with ID: "<<product1->getProductId()<<endl;
+	Product* product2=new Product(2, "T-Shirt", CLOTHING, 20.0);
+	cout<<"Product created with ID: "<<product2->getProductId()<<endl;
+	Product* product3=new Product(3, "Apple", GROCERY, 1.0);
+	cout<<"Product created with ID: "<<product3->getProductId()<<endl;
+
+	CredentialVault* credentialVault=new CredentialVault();
+	credentialVault->addCredential("1", "password123");
+	credentialVault->addCredential("2", "password456");
+	// Validate credentials
+	cout<<"Validating credentials for user 1: "<<credentialVault->validateCredential("1", "password123")<<endl;
+	cout<<"Validating credentials for user 2: "<<credentialVault->validateCredential("2", "password456")<<endl;
+
+	OrderHandler* orderHandler=new OrderHandler();
+
+	//states for user1
+	unique_ptr<State> confirmationState=new ConfirmationState();
+	return 0;
 }
